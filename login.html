@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Log In</title>
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&amp;display=swap'>
+  <style>
+    * {
+      font-family: "Poppins";
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-image: url('html/GeneralIMG/StandardBG.png');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-position: center;
+    }
+
+    .screen-1 {
+      width: 90%;
+      max-width: 400px;
+      background: #f1f7fe;
+      padding: 2em 2em 7em;
+      border-radius: 30px;
+      box-shadow: 0 0 2em #e6e9f9;
+      gap: 2em;
+      position: fixed;
+    }
+
+    .logo {
+      display: block;
+      margin: 0 auto;
+      width: 100%;
+      max-width: 200px;
+      margin-top: 1em;
+    }
+
+    .email,
+    .password,
+    .form-group {
+      margin-top: 2em;
+      margin-bottom: 1.5em;
+    }
+
+    label {
+      font-weight: 500;
+      color: #4d4d4d;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.5em;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-top: 0.5em;
+      font-size: 1em;
+      box-shadow: none;
+      outline: none;
+    }
+
+    .form-group input[type="checkbox"] {
+      margin-right: 0.5em;
+    }
+
+    .container form h1 {
+      font-size: 1.2em;
+      color: #006937;
+      margin-bottom: 0.5em;
+    }
+
+    .container label {
+      display: block;
+      cursor: pointer;
+      margin-bottom: 0.5em;
+    }
+
+    .container label input {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .container label span {
+      display: flex;
+      align-items: center;
+      padding: 0.375em 0.75em;
+      border-radius: 20px;
+      transition: background-color 0.25s ease;
+      color: #006937;
+      cursor: pointer;
+    }
+
+    .container label input:checked + span {
+      background-color: #6db282;
+      color: white;
+    }
+
+    .login {
+      margin-top: 50px;
+      width: 100%;
+      padding: 0.75em;
+      background: #006937;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.8em;
+      color: #5e5e5e;
+      margin-top: 1em;
+    }
+
+    .footer a {
+      text-decoration: none;
+      color: #5e5e5e;
+    }
+    
+    .password-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    
+    .password-container input {
+      width: 100%;
+      padding-right: 2.5em;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 0.9em;
+      margin-top: 0.5em;
+      display: none;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 0.5em;
+      cursor: pointer;
+    }
+
+    .toggle-password-active {
+      padding: 0.5em;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-top: 0.5em;
+      font-size: 1em;
+      box-shadow: none;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="screen-1">
+    <img class="logo" src="html/GeneralIMG/Logo.png" alt="Logo">
+    <div class="email">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email" placeholder="username@dlsu.edu.ph"/>
+      <div class="error-message" id="emailError">Please enter a valid DLSU email address.</div>
+    </div>
+    <div class="password">
+      <label for="password">Password</label>
+      <div class="password-container">
+        <input class="pas" type="password" id="password" name="password" placeholder="············"/>
+        <ion-icon class="toggle-password" name="eye-off-outline" onclick="togglePasswordVisibility()"></ion-icon>
+      </div>
+    </div>
+    <div class="form-group form-check">
+      <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
+      <label class="form-check-label" for="rememberMe">Remember Me</label>
+    </div>
+    <button class="login" id="login">Login</button>
+    <div class="footer">
+      <a href="register">Register</a> | <a href="forgot_password">Forgot Password?</a>
+    </div>
+    <div class="footer">
+      <a href="index" style="color: #006937;"><b>Back to Homepage</b></a>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('login').addEventListener('click', function(event) {
+      event.preventDefault();
+
+      var email = document.getElementById('email').value;
+      var emailError = document.getElementById('emailError');
+      var rememberMe = document.getElementById('rememberMe').checked;
+
+      if (!email.endsWith('@dlsu.edu.ph')) {
+        emailError.style.display = 'block';
+        return;
+      } else {
+        emailError.style.display = 'none';
+      }
+
+      // Simulate successful login for demonstration
+      if (email.includes('technician')) {
+        localStorage.setItem('userType', 'technician');
+      } else {
+        localStorage.setItem('userType', 'user');
+      }
+
+      if (rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
+        extendRememberPeriod();
+      } else {
+        localStorage.removeItem('rememberMe');
+      }
+
+      // Redirect to menu page
+      location.href = 'menu';
+    });
+
+    function togglePasswordVisibility() {
+      var passwordInput = document.getElementById('password');
+      var toggleIcon = document.querySelector('.toggle-password');
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.name = 'eye-outline';
+        passwordInput.classList.add('toggle-password-active');
+      } else {
+        passwordInput.type = 'password';
+        toggleIcon.name = 'eye-off-outline';
+        passwordInput.classList.remove('toggle-password-active');
+      }
+    }
+
+    function extendRememberPeriod() {
+      // Extend the "remember" period by 3 weeks
+      var rememberMeExpiry = new Date();
+      rememberMeExpiry.setDate(rememberMeExpiry.getDate() + 21); // 21 days
+      localStorage.setItem('rememberMeExpiry', rememberMeExpiry.toISOString());
+    }
+  </script>
+</body>
+</html>

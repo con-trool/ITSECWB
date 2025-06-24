@@ -1,0 +1,149 @@
+/********** common setting **********/
+h2 {
+    font-size: 2.8rem !important;
+    font-weight: 700;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+img {
+    display: block;
+    max-width: 200%;
+}
+
+a,
+button {
+    cursor: pointer;
+}
+
+.jumbotron {
+    margin-bottom: 0 !important;
+}
+
+.atlas-cta {
+    border-radius: 22px !important;
+    padding: 12px 30px !important;
+    font-weight: 700;
+    transition: .3s ease-in-out !important;
+}
+
+.atlas-cta:hover {
+    text-decoration: none;
+    transform: translateY(-5px);
+}
+
+.atlas-cta-wide {
+    width: 100%;
+}
+
+.cta-green {
+    background: #093B24;
+    color: #ffffff;
+}
+
+.cta-green:hover {
+    color: #ffffff;
+    background: #121a2e;
+}
+
+.cta-ghost {
+    border: 2px solid #192440 !important;
+    color: #192440;
+}
+
+.cta-ghost:hover {
+    color: #ffffff;
+    background: #121a2e;
+}
+.container-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.4s, visibility 0.4s;
+}
+
+.container-top.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+.top {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    background: #192440;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.top:hover {
+    background-color: #192440;
+}
+
+.top:before {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(225deg); /* Rotate the arrow to face upwards */
+}
+
+#banner {
+    background-size: cover;
+}
+
+/********** banner **********/
+#banner header {
+    overflow: hidden;
+}
+
+#banner header img {
+    max-width: 190px;
+}
+
+/********** feature (skew background) **********/
+.feature img {
+    width: 100%;
+    max-width: 480px;
+}
+
+#feature-first {
+    background: linear-gradient(168deg, #05321d 55%, #478159 0);
+}
+
+#feature-last {
+    background: #478159;
+    
+}
+
+/********** price table **********/
+#price-table {
+    padding-top: 4rem !important;
+    padding-bottom: 4rem !important;
+}
+
+#price-table__premium {
+    background: #192440;
+    color: #ffffff;
+}
+
+#price-table ul li {
+    padding: 5px 0;
+}
+
+/********** RWD **********/
+@media (max-width: 575px) {
+    #banner h1 {
+        font-size: 3.6rem;
+    }
+}

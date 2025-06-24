@@ -1,0 +1,208 @@
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700);
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+:root {
+	--vs-primary: 29 92 255;
+}
+
+/*Dialog Styles*/
+dialog {
+	padding: 1rem 3rem;
+	background: white;
+	width: 700px;
+	padding-top: 2rem;
+	border-radius: 20px;
+	border: 0;
+	box-shadow: 0 5px 30px 0 rgb(0 0 0 / 10%);
+	animation: fadeIn 1s ease both;
+	&::backdrop {
+		animation: fadeIn 1s ease both;
+		background: rgb(255 255 255 / 40%);
+		z-index: 2;
+		backdrop-filter: blur(20px);
+	}
+	.x {
+		filter: grayscale(1);
+		border: none;
+		background: none;
+		position: absolute;
+		top: 15px;
+		right: 10px;
+		transition: ease filter, transform 0.3s;
+		cursor: pointer;
+		transform-origin: center;
+		&:hover {
+			filter: grayscale(0);
+			transform: scale(1.1);
+		}
+	}
+	h2 {
+		font-weight: 600;
+		font-size: 2rem;
+		padding-bottom: 1rem;
+        
+	}
+	p {
+		font-size: 1rem;
+		line-height: 1.3rem;
+		padding: 0.5rem 0;
+		a {
+			&:visited {
+				color: rgb(var(--vs-primary));
+			}
+		}
+	}
+}
+
+.bdialog{
+    padding: 1em;
+    background: #006937;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    padding: 20px;
+    margin-right: 15px;
+}
+/*General Styles*/
+a{
+	color: #006937;
+}
+button.primary {
+	display: inline-block;
+	font-size: 0.8rem;
+	color: #fff !important;
+	background: rgb(var(--vs-primary) / 100%);
+	padding: 13px 25px;
+	border-radius: 17px;
+	transition: background-color 0.1s ease;
+	box-sizing: border-box;
+	transition: all 0.25s ease;
+	border: 0;
+	cursor: pointer;
+	box-shadow: 0 10px 20px -10px rgb(var(--vs-primary) / 50%);
+	&:hover {
+		box-shadow: 0 20px 20px -10px rgb(var(--vs-primary) / 50%);
+		transform: translateY(-5px);
+	}
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+body {
+   font-family: 'Poppins', sans-serif;
+   background-image: url('../html/GeneralIMG/StandardBG.png');
+   background-size: cover;
+   background-repeat: no-repeat;
+   background-attachment: fixed;
+   background-position: center;
+   color: white;
+   margin: 0;
+   padding: 20px;
+ }
+ :root {
+	--arrow-bg: #00FFAD;
+	--arrow-icon: url(https://upload.wikimedia.org/wikipedia/commons/9/9d/Caret_down_font_awesome_whitevariation.svg);
+	--option-bg: white;
+	--select-bg: white;
+  }
+ select {
+	/* Reset */
+	
+	appearance: none;
+	border: 0;
+	outline: 0;
+	font: inherit;
+	/* Personalize */
+	width: 20rem;
+	padding: 1rem 4rem 1rem 1rem;
+	background: var(--arrow-icon) no-repeat right 0.8em center / 1.4em,
+    linear-gradient(to left, var(--arrow-bg) 3em, var(--select-bg) 3em);;
+	color: black;
+	border-radius: 0.25em;
+	box-shadow: #006937;
+	cursor: pointer;
+	/* Remove IE arrow */
+	&::-ms-expand {
+	  display: none;
+	}
+	/* Remove focus outline */
+	&:focus {
+	  outline: none;
+	}
+	/* <option> colors */
+	option {
+	  color: inherit;
+	  background-color: var(--option-bg);
+	}
+  }
+ .container {
+   max-width: 1200px;
+   height: fit-content;
+   margin: 0 auto;
+   padding: 20px;
+   background-color: rgba(0, 0, 0, 0.7);
+   border-radius: 15px;
+ }
+
+ h1, h2 {
+   text-align: center;
+ }
+
+ .form-group {
+   margin: 20px 0;
+ }
+
+ .form-group label {
+   display: block;
+   margin-bottom: 10px;
+ }
+
+ .form-group select, .form-group input {
+   width:18%;
+   padding: 10px;
+   border-radius: 5px;
+   border: none;
+ }
+
+ .seats {
+   display: flex;
+   flex-wrap: wrap;
+   justify-content: space-around;
+   margin-top: 30px;
+ }
+
+ .seat {
+   background-color: green;
+   border-radius: 10px;
+   margin: 10px;
+   padding: 20px;
+   text-align: center;
+   transition: transform 0.3s ease, background-color 0.3s ease;
+   cursor: pointer;
+   width: calc(20% - 20px); /* Adjust to fit 5 seats per row */
+ }
+
+ .seat:hover {
+   transform: scale(1.05);
+ }
+
+ .seat.reserved {
+   background-color: red;
+ }
+
+ .seat img {
+   width: 100px;
+   display: block;
+   margin: 0 auto 10px;
+ }
+ .bdialog:hover{
+	transform: scale(1.08);
+	cursor: pointer;
+ }

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LabSpot</title>
+    <style>
+        :root {
+            --logo-width: 170px;
+            --home-link-font-size: 20px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-image: url('html/GeneralIMG/StandardBG.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+
+        .top-center-logo {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: var(--logo-width);
+            height: auto;
+        }
+
+        .home-link, .about-link, .service-link {
+            position: absolute;
+            font-size: 20px;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .home-link {
+            font-size: var(--home-link-font-size);
+            font-weight: bold;
+        }
+
+        .home-link.top-left {
+            top: 70px;
+            left: 109px;
+        }
+
+        .user-profile-bar {
+            position: absolute;
+            top: 130px;
+            left: 0;
+            width: 96.1%;
+            height: 60px;
+            background: #05321d;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding-left: 65px;
+            font-size: 30px;
+        }
+
+        .button-section {
+            position: absolute;
+            top: 210px;
+            left: 20px;
+            background-color:#478159;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            height: calc(100% - 300px);
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .button-container button {
+            background-color: rgba(0, 54, 0, 0.8);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-container button:hover {
+            background-color: rgba(115, 227, 107, 0.8);
+        }
+
+        .user-container {
+            position: absolute;
+            top: 210px;
+            left: 300px;
+            padding: 20px;
+            border-radius: 10px;
+            height: calc(100% - 300px);
+            width: calc(100% - 390px);
+        }
+
+        .user-container h1 {
+            font-size: 60px;
+            color: #3ab54a;
+        }
+
+        .user-container h2 {
+            font-size: 30px;
+        }
+
+        .user-container h3 {
+            font-weight: 700;
+            font-size: 20px;
+            font-style: italic;
+        }
+
+        .user-container p {
+            margin-left: 5%;
+            margin-right: 5%;
+        }
+
+        .user-container img {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .bdialog {
+            padding: 1em;
+            background: #006937;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            margin-right: 15px;
+            width: 100px;
+            margin-top: 30px;
+        }
+
+        .bdialogred {
+            padding: 1em;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            margin-right: 15px;
+            width: 50px;
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+        }
+
+        .bdialog:hover {
+            transform: scale(1.08);
+            cursor: pointer;
+            color: black;
+        }
+
+        .bdialogred:hover {
+            transform: scale(1.08);
+            cursor: pointer;
+            color: black;
+        }
+
+        .logo {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .logo img {
+            width: var(--logo-width);
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">
+        <img src="html/IndexIMG/Logo.png" alt="LabSpot Logo">
+    </div>
+
+    <div class="home-link top-left" id="home-link">Home</div>
+
+    <div class="user-profile-bar">Profile</div>
+
+    <div class="button-section">
+        <div class="button-container">
+            <button onclick="window.location.href='edituserpage'">Edit Profile</button>
+            <button onclick="window.location.href='reservation'">Edit/See Reservations</button>
+            <button onclick="window.location.href='deleteprofile'">Delete Account</button>
+        </div>
+    </div>
+
+    <div class="user-container">
+        <img src="img/user.jpg" alt="Profile Image">
+        <h1 id="user-name">User 1</h1>
+        <h3 id="user-email">Email</h3>
+        <h2>About Me</h2>
+        <p id="about-me">I am a tech-savvy individual with a Bachelor's degree in Software Development, seeking employment as a mobile game developer. I am passionate about consistently advancing my knowledge and skills. I have attended multiple seminars and boot camps on coding and game development.</p>
+        <h2 id="additional-info-header" style="display: none;">Additional Info</h2>
+        <p id="additional-info" style="display: none;"></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userType = localStorage.getItem('userType');
+            const profileBar = document.querySelector('.user-profile-bar');
+            const userName = document.getElementById('user-name');
+            const userEmail = document.getElementById('user-email');
+            const aboutMe = document.getElementById('about-me');
+            const additionalInfoHeader = document.getElementById('additional-info-header');
+            const additionalInfo = document.getElementById('additional-info');
+            const profileImage = document.querySelector('.user-container img');
+            const homeLink = document.getElementById('home-link');
+
+            if (userType === 'technician') {
+                profileBar.textContent = 'Technician Profile';
+                userName.textContent = 'Technician 1';
+                userEmail.textContent = 'technician@dlsu.edu.ph';
+                aboutMe.textContent = 'I am a dedicated technician with over 5 years of experience in the field. I specialize in hardware troubleshooting, network setup, and system maintenance. My goal is to provide the best technical support and ensure smooth operations of all technical equipment.';
+                additionalInfoHeader.textContent = 'Skills';
+                additionalInfoHeader.style.display = 'block';
+                additionalInfo.textContent = 'Network Configuration, System Diagnostics, Hardware Repair, Technical Support, Troubleshooting';
+                additionalInfo.style.display = 'block';
+                profileImage.src = 'img/user.jpg';
+                profileImage.alt = 'Technician Image';
+                homeLink.onclick = () => window.location.href = 'technicianmenu';
+            } else {
+                profileBar.textContent = 'User Profile';
+                userName.textContent = 'Student 1';
+                userEmail.textContent = 'student@example.com';
+                aboutMe.textContent = 'I am a tech-savvy individual with a Bachelor\'s degree in Software Development, seeking employment as a mobile game developer. I am passionate about consistently advancing my knowledge and skills. I have attended multiple seminars and boot camps on coding and game development.';
+                additionalInfoHeader.style.display = 'none';
+                additionalInfo.style.display = 'none';
+                profileImage.src = 'img/user.jpg';
+                profileImage.alt = 'User Image';
+                homeLink.onclick = () => window.location.href = 'menu';
+            }
+        });
+    </script>
+</body>
+</html>

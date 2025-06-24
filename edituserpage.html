@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>LabSpot</title>
+    <style>
+        :root {
+            --logo-width: 170px;
+            --home-link-font-size: 20px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('IndexIMG/IndexBG.png') center/cover no-repeat;
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+
+        .top-center-logo {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: var(--logo-width);
+            height: auto;
+        }
+
+        a {
+            position: absolute;
+            font-size: var(--home-link-font-size);
+            color: white;
+            text-decoration: none;
+        }
+
+        .home-link {
+            top: 70px;
+            left: 109px;
+            font-weight: bold;
+        }
+
+        .about-link, .service-link {
+            top: 70px;
+        }
+
+        .user-profile-bar {
+            position: absolute;
+            top: 130px;
+            left: 0; /* Stick to the left side */
+            width: 96.1%; /* Full width */
+            height: 60px;
+            background: #05321d;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding-left: 65px; /* Indent for the text */
+            font-size: 30px; 
+        }
+
+        .button-section {
+            position: absolute;
+            top: 210px;
+            left: 20px;
+            background: #478159;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            height: calc(100% - 300px);
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .button-container button {
+            background: rgba(0, 54, 0, 0.8);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .button-container button:hover {
+            background: rgba(115, 227, 107, 0.8);
+        }
+
+        .user-edit-container {
+            position: absolute;
+            top: 210px;
+            right: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            height: calc(100% - 300px);
+            width: calc(100% - 370px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .form-container {
+            background-color: rgba(0, 54, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        form {
+            width: 100%;
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 5px;
+            color: white;
+        }
+
+        form input[type="text"],
+        form input[type="file"],
+        form textarea {
+            width: calc(100% - 16px);
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        form textarea {
+            height: 150px; /* Set fixed height for the description textarea */
+        }
+
+        form input[type="submit"] {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(115, 227, 107, 0.8);
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 10px;
+        }
+
+        form input[type="submit"]:hover {
+            background: rgba(115, 227, 107, 1);
+        }
+
+        .bdialog {
+            padding: 1em;
+            background: #006937;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            padding: 20px;
+            margin-right: 15px;
+        }
+
+        .bdialogred {
+            padding: 1em;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            padding: 20px;
+            margin-right: 15px;
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+        }
+
+        .bdialog:hover {
+            transform: scale(1.08);
+            cursor: pointer;
+            color: black;
+        }
+
+        .bdialogred:hover {
+            transform: scale(1.08);
+            cursor: pointer;
+            color: black;
+        }
+
+        .logo {
+            position: absolute;
+            top: 40px; /* Adjusted distance from the top */
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .logo img {
+            width: var(--logo-width);
+            height: auto;
+        }
+    </style>
+</head>
+<body style="background: url('html/GeneralIMG/StandardBG.png') center/cover no-repeat fixed;">
+
+<div class="logo">
+    <img src="html/IndexIMG/Logo.png" alt="LabSpot Logo">
+</div>
+
+<a href="#" class="home-link" id="home-link">Home</a>
+
+<div class="user-profile-bar">Edit Profile</div>
+
+<div class="button-section">
+    <div class="button-container">
+        <button onclick="window.location.href='userprofile'">User Profile</button>
+        <button onclick="window.location.href='reservation'">Edit/See Reservations</button>
+        <button onclick="window.location.href='deleteprofile'">Delete Account</button>
+    </div>
+</div>
+
+<div class="user-edit-container">
+    <div class="form-container">
+        <form action="/submit-form" method="post" enctype="multipart/form-data">
+            <label for="email">Name:</label>
+            <input type="text" id="email" name="email">
+
+            <label for="password">College:</label>
+            <input type="text" id="password" name="password">
+
+            <label for="name">Program:</label>
+            <input type="text" id="name" name="name">
+
+            <label for="description">Description:</label>
+            <textarea id="description" name="description"></textarea>
+            
+            <label for="picture">Upload a picture:</label>
+            <input type="file" id="picture" name="picture" accept="image/*">
+            <div class="center">
+                <div class="bdialog" onclick="window.location.href='userprofile'">
+                    Save
+                </div>
+                <div class="bdialogred" onclick="window.location.href='userprofile'">
+                    Back
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userType = localStorage.getItem('userType');
+        const homeLink = document.getElementById('home-link');
+
+        if (userType === 'technician') {
+            homeLink.href = 'technicianmenu';
+        } else {
+            homeLink.href = 'menu';
+        }
+    });
+</script>
+
+</body>
+</html>
+

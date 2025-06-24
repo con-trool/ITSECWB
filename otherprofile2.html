@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>LabSpot - User Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url('html/GeneralIMG/StandardBG.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .header .logo {
+            text-align: center;
+            width: 100%;
+        }
+
+        .header img {
+            height: 80px;
+        }
+
+        .header .back-button {
+            font-size: 25px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .profile-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: center;
+            opacity: 0; /* Initially set opacity to 0 */
+            transition: opacity 0.5s ease-in-out; /* Add transition effect */
+        }
+
+        .box {
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .profile-avatar-wrapper {
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .avatar {
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+
+        .profile-details {
+            margin: 10px 0;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .profile-details h2 {
+            margin-bottom: 20px;
+            font-size: 32px;
+            color: #ffffff;
+        }
+
+        .profile-details p {
+            margin: 20px 0;
+            font-size: 20px;
+            color: #ffffff;
+        }
+
+        .profile-details a {
+            color: #ea6153;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .profile-details a:hover {
+            text-decoration: underline;
+        }
+
+        .profile-links {
+            margin-top: 30px;
+        }
+
+        .profile-links h3 {
+            font-size: 24px;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .profile-links p {
+            color: #ffffff;
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="back-button" onclick="goBack();">
+                <i class="fa fa-arrow-left"></i> Back
+            </div>
+            <div class="logo">
+                <img src="html/IndexIMG/Logo.png" alt="LabSpot Logo">
+            </div>
+        </div>
+
+        <!-- Add a wrapper with a class for animation -->
+        <div class="profile-section">
+            <div class="box">
+                <div class="image-block">
+                    <div class="profile-avatar-wrapper">
+                        <div class="avatar" style="background-image: url('img/picture2.jpg');"></div>
+                    </div>
+                    <div class="profile-details">
+                        <h2>SERRANO, CON MIKO B.</h2>
+                        <p><b>Email:</b> <a href="mailto:con_serrano@dlsu.edu.ph">miko_serrano@dlsu.edu.ph</a></p>
+                        <p><b>College:</b> CCS</p>
+                        <p><b>Course Program:</b> Information Technology</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript to trigger the animation when the page loads
+        document.addEventListener("DOMContentLoaded", function () {
+            // Wait for a short delay to start animation
+            setTimeout(function () {
+                document.querySelector(".profile-section").style.opacity = "1";
+            }, 100);
+        });
+
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+
+</html>

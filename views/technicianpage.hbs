@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LabSpot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        
+        :root {
+            --logo-width: 170px;
+            --home-link-font-size: 20px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('IndexIMG/IndexBG.png') center/cover no-repeat;
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+
+        .top-center-logo {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: var(--logo-width);
+            height: auto;
+        }
+        
+        .userImage{
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+        a {
+            position: absolute;
+            font-size: var(--home-link-font-size);
+            color: white;
+            text-decoration: none;
+        }
+
+        .logout-link {
+            top: 70px;
+            right: 109px;
+            font-weight: bold;
+        }
+
+        .about-link, .service-link {
+            top: 70px;
+        }
+
+        .user-profile-bar {
+            position: absolute;
+            top: 130px;
+            left: 0;
+            width: 96.1%;
+            height: 60px;
+            background: #05321d;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding-left: 65px;
+            font-size: 30px;
+        }
+
+        .button-section {
+            position: absolute;
+            top: 210px;
+            left: 20px;
+            background: #478159;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            height: calc(100% - 300px);
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .button-container button {
+            background: rgba(0, 54, 0, 0.8);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .button-container button:hover {
+            background: rgba(115, 227, 107, 0.8);
+        }
+
+        .user-edit-container {
+            position: absolute;
+            top: 210px;
+            right: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            height: calc(100% - 300px);
+            width: calc(100% - 370px);
+            overflow-x: auto;
+        }
+
+        .wrapper {
+            margin: 0 auto;
+            padding: 40px;
+            max-width: 2000px;
+        }
+
+        .table {
+            width: 95%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            margin: 0 auto;
+            display: table;
+            table-layout: fixed;
+        }
+
+        @media screen and (max-width: 580px) {
+            .table {
+                display: block;
+            }
+        }
+
+        .row {
+            display: table-row;
+            background: #f6f6f6;
+        }
+
+        .row:nth-of-type(odd) {
+            background: #e9e9e9;
+        }
+
+        .row.header {
+            font-weight: 900;
+            color: #ffffff;
+            background: #ea6153;
+        }
+
+        .row.green {
+            background: #27ae60;
+        }
+
+        .row.blue {
+            background: #2980b9;
+        }
+
+        @media screen and (max-width: 580px) {
+            .row {
+                padding: 14px 0 7px;
+                display: block;
+            }
+
+            .row.header {
+                padding: 0;
+                height: 6px;
+            }
+
+            .row.header .cell {
+                display: none;
+            }
+
+            .row .cell {
+                margin-bottom: 10px;
+            }
+
+            .row .cell:before {
+                margin-bottom: 3px;
+                content: attr(data-title);
+                min-width: 98px;
+                font-size: 10px;
+                line-height: 10px;
+                font-weight: bold;
+                text-transform: uppercase;
+                color: #969696;
+                display: block;
+            }
+        }
+
+        .cell {
+            padding: 6px 12px;
+            display: table-cell;
+            color: black;
+            vertical-align: middle;
+        }
+
+        @media screen and (max-width: 580px) {
+            .cell {
+                padding: 2px 16px;
+                display: block;
+            }
+        }
+
+        .bdialog,
+        .bdialogred {
+            display: inline-block;
+            padding: 0.5em;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            margin-right: 5px;
+            text-align: center;
+            transition: transform 0.3s ease, color 0.3s ease;
+            text-decoration: none;
+            width: 60px;
+            font-size: 12px;
+        }
+
+        .bdialog {
+            background: #006937;
+        }
+
+        .bdialogred {
+            background: red;
+        }
+
+        .bdialog:hover,
+        .bdialogred:hover {
+            transform: scale(1.08);
+            cursor: pointer;
+            color: black;
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .logo {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .logo img {
+            width: var(--logo-width);
+            height: auto;
+        }
+
+        .edit-icon {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            margin-right: 50px;
+            margin-left: 60px;
+        }
+
+        .delete-icon {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        
+        #confirmDialog {
+            border: none;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #confirmDialog h2 {
+            margin-top: 0;
+        }
+
+        #confirmDialog div {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        #confirmDialog button {
+            background: #006937;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        #confirmDialog button:hover {
+            background: rgba(115, 227, 107, 0.8);
+        }
+
+        #confirmDialog button:last-child {
+            background: red;
+        }
+    </style>
+</head>
+<body style="background: url('html/GeneralIMG/StandardBG.png') center/cover no-repeat fixed;">
+    <div class="logo">
+        <img src="html/IndexIMG/Logo.png" alt="LabSpot Logo">
+    </div>
+
+    <a href="logout" class="logout-link" id="logout-link"><i class="fa fa-sign-out"></i> Logout</a>
+
+    <div class="user-profile-bar">Technician Dashboard</div>
+
+    <div class="button-section">
+        <div class="button-container" style="width: 280px;">
+            <button onclick="openBookDialog()">Book Seat</button>
+            <button onclick="window.location.href='deleteprofile'">Delete Account</button>
+        </div>
+    </div>
+    
+    <div class="user-edit-container">
+        <div class="table">
+            <div class="row header green">
+                <div class="cell">User ID</div>
+                <div class="cell">Student Name</div>
+                <div class="cell">Req. Date</div>
+                <div class="cell">Req. Time</div>
+                <div class="cell">Seat No.</div>
+                <div class="cell">Building</div>
+                <div class="cell">Edit</div>
+                <div class="cell">Delete</div>
+            </div>
+            {{#each seats}}
+            <div class="row">
+                <div class="cell" data-title="User ID">{{userID}}</div>
+                <div class="cell" data-title="Student Name">{{lookup ../users userID "name"}}</div>
+                <div class="cell" data-title="Req. Date">{{date}}</div>
+                <div class="cell" data-title="Req. Time">{{time}}</div>
+                <div class="cell" data-title="Seat No.">{{substring seatID}}</div>
+                <div class="cell" data-title="Building">{{building}}</div>
+                <div class="cell" data-title="Edit">
+                    <div class="center">
+                        <img src="img/EditICn.png" alt="Edit" class="edit-icon" onclick="showEditDialog('{{seatID}}', '{{building}}', '{{date}}', '{{time}}', '{{userID}}', '{{isAnonymous}}')">
+                    </div>
+                </div>
+                <div class="cell" data-title="Delete">
+                    <div class="center">
+                        <img src="img/DelICN.png" alt="Delete" class="delete-icon" onclick="handleDeleteAction('{{seatID}}', '{{date}}', '{{time}}', '{{userID}}')">
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+        <div class="pagination">
+            {{#if prevPage}}
+                <a href="?page={{prevPage}}">Previous</a>
+            {{/if}}
+            {{#if nextPage}}
+                <a href="?page={{nextPage}}">Next</a>
+            {{/if}}
+        </div>
+    </div>
+
+    <dialog id="book">
+        <h2>Book for Student</h2>
+        <form id="bookForm">
+            <label for="searchUserID">User ID:</label>
+            <input type="text" id="searchUserID" name="searchUserID" required>
+            <button type="button" onclick="searchUser()">Search</button>
+            <br><br>
+            <div id="userSearchResult" style="display: none;">
+                <img id="userImage" src="" alt="User Image" width="100" style="background-size: cover; background-position: center; border-radius: 50%; width: 100px; height: 100px; margin: 0 auto;"><br>
+                <span id="userName"></span><br><br>
+            </div>
+            <br><br>
+            <label for="bookDate">Date:</label>
+            <input type="date" id="bookDate" name="bookDate" required><br><br>
+            
+            <label for="bookTime">Time:</label>
+            <select id="bookTime" name="bookTime" required>
+                <option value="7:30-8:00">07:30 - 08:00</option>
+                <option value="8:15-8:45">08:15 - 08:45</option>
+                <option value="9:00-9:30">09:00 - 09:30</option>
+                <option value="9:45-10:15">09:45 - 10:15</option>
+                <option value="10:30-11:00">10:30 - 11:00</option>
+                <option value="11:15-11:45">11:15 - 11:45</option>
+                <option value="12:00-12:30">12:00 - 12:30</option>
+                <option value="12:45-13:15">12:45 - 13:15</option>
+                <option value="13:30-14:00">13:30 - 14:00</option>
+                <option value="14:15-14:45">14:15 - 14:45</option>
+                <option value="15:00-15:30">15:00 - 15:30</option>
+                <option value="15:45-16:15">15:45 - 16:15</option>
+                <option value="16:30-17:00">16:30 - 17:00</option>
+            </select><br><br>
+
+            <label for="bookSeat">Seat Number:</label>
+            <input type="number" id="bookSeat" name="bookSeat" required><br><br>
+            
+            <label for="bookBuilding">Building:</label>
+            <select id="bookBuilding" name="bookBuilding" required>
+                <option value="Gokongwei">Gokongwei</option>
+                <option value="Velasco">Velasco</option>
+                <option value="Br. Andrew Gonzales">Br. Andrew Gonzales</option>
+            </select><br><br>
+
+            <label for="isAnonymousBook">Anonymous:</label>
+            <input type="checkbox" id="isAnonymousBook" name="isAnonymousBook"><br><br>
+            
+            <button type="button" onclick="submitReservation()">Submit</button>
+            <button type="button" onclick="closeDialog()">Cancel</button>
+        </form>
+        <p id="bookError" style="color: red; display: none;">Error: Seat is already reserved or invalid values in the form.</p>
+    </dialog>
+
+    <dialog id="editDialog">
+        <h2>Edit Reservation</h2>
+        <form id="editForm">
+            <input type="hidden" id="oldDate" name="oldDate">
+            <input type="hidden" id="oldTimeslot" name="oldTimeslot">
+            <input type="hidden" id="oldSeatID" name="oldSeatID">
+            <input type="hidden" id="userIDEdit" name="userIDEdit">
+
+            <label for="editDate">Date:</label>
+            <input type="date" id="editDate" name="editDate" required><br><br>
+            
+            <label for="editTime">Time:</label>
+            <select id="editTime" name="editTime" required>
+                <option value="7:30-8:00">07:30 - 08:00</option>
+                <option value="8:15-8:45">08:15 - 08:45</option>
+                <option value="9:00-9:30">09:00 - 09:30</option>
+                <option value="9:45-10:15">09:45 - 10:15</option>
+                <option value="10:30-11:00">10:30 - 11:00</option>
+                <option value="11:15-11:45">11:15 - 11:45</option>
+                <option value="12:00-12:30">12:00 - 12:30</option>
+                <option value="12:45-13:15">12:45 - 13:15</option>
+                <option value="13:30-14:00">13:30 - 14:00</option>
+                <option value="14:15-14:45">14:15 - 14:45</option>
+                <option value="15:00-15:30">15:00 - 15:30</option>
+                <option value="15:45-16:15">15:45 - 16:15</option>
+                <option value="16:30-17:00">16:30 - 17:00</option>
+                <!-- Add more times as needed -->
+            </select><br><br>
+
+            <label for="editSeat">Seat Number:</label>
+            <input type="number" id="editSeat" name="editSeat" required><br><br>
+            
+            <label for="editBuilding">Building:</label>
+            <select id="editBuilding" name="editBuilding" required>
+                <option value="Gokongwei">Gokongwei</option>
+                <option value="Velasco">Velasco</option>
+                <option value="Br. Andrew Gonzales">Br. Andrew Gonzales</option>
+            </select><br><br>
+
+            <label for="isAnonymous">Anonymous:</label>
+            <input type="checkbox" id="isAnonymous" name="isAnonymous"><br><br>
+            
+            <button type="button" onclick="submitEdit()">Submit</button>
+            <button type="button" onclick="closeEditDialog()">Cancel</button>
+        </form>
+        <p id="editError" style="color: red; display: none;">Error: Seat is already reserved or invalid values in form.</p>
+    </dialog>
+
+    <dialog id="confirmDialog">
+        <h2>Confirmation</h2>
+        <p id="confirmMessage">Are you sure?</p>
+        <div>
+            <button id="confirmYes">Confirm</button>
+            <button id="confirmNo">Cancel</button>
+        </div>
+    </dialog>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userType = localStorage.getItem('userType');
+            const homeLink = document.getElementById('home-link');
+            if (userType === 'technician') {
+                homeLink.href = 'technicianmenu';
+                const studentNameCells = document.querySelectorAll('.cell[data-title="Student Name"]');
+                studentNameCells.forEach(cell => cell.style.display = 'table-cell');
+            } else {
+                homeLink.href = 'menu';
+            }
+
+            const buildingDropdown = document.getElementById('bookBuilding');
+            const seatNumberInput = document.getElementById('bookSeat');
+
+            buildingDropdown.addEventListener('change', function() {
+                const selectedBuilding = buildingDropdown.value;
+                let maxSeats = 0;
+
+                if (selectedBuilding === 'Gokongwei') {
+                    maxSeats = 20;
+                } else if (selectedBuilding === 'Velasco') {
+                    maxSeats = 15;
+                } else if (selectedBuilding === 'Br. Andrew Gonzales') {
+                    maxSeats = 40;
+                }
+
+                seatNumberInput.max = maxSeats;
+            });
+        });
+
+        function openBookDialog() {
+            const bookDialog = document.getElementById('book');
+            bookDialog.showModal();
+        }
+
+        function closeDialog() {
+            const bookDialog = document.getElementById('book');
+            bookDialog.close();
+        }
+
+        async function searchUser() {
+            const userID = document.getElementById('searchUserID').value;
+            try {
+                const response = await fetch(`/api/searchUser?userID=${userID}`);
+                const user = await response.json();
+                if (user) {
+                    document.getElementById('userSearchResult').style.display = 'block';
+                    document.getElementById('userImage').src = user.image; // Assuming user object has an 'image' property
+                    document.getElementById('userName').textContent = user.name; // Assuming user object has a 'name' property
+                } else {
+                    document.getElementById('userSearchResult').style.display = 'none';
+                    alert('User not found');
+                }
+            } catch (error) {
+                console.error('Error searching user:', error);
+                alert('Error searching user');
+            }
+        }
+
+        async function submitReservation() {
+            const bookForm = document.getElementById('bookForm');
+            const userID = document.getElementById('searchUserID').value;
+            const date = bookForm.bookDate.value;
+            const time = bookForm.bookTime.value;
+            const seatID = bookForm.bookSeat.value;
+            const building = bookForm.bookBuilding.value;
+            const isAnonymous = document.getElementById('isAnonymousBook').checked;
+
+            const seatIdFormatted = `${building}-${date}-${time}-${seatID}`;
+            console.log('Booking seat with:', { date, time, seatID: seatIdFormatted, userID, isAnonymous });
+
+            try {
+                const response = await fetch('/api/bookReservation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, time, seatID: seatIdFormatted, userID, isAnonymous })
+                });
+
+                const result = await response.json();
+                console.log('Booking Result:', result);
+                if (result.success) {
+                    location.reload();
+                } else {
+                    document.getElementById('bookError').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error booking reservation:', error);
+                document.getElementById('bookError').style.display = 'block';
+            }
+        }
+
+        function showMessage(message, callback) {
+            const confirmDialog = document.getElementById('confirmDialog');
+            const confirmMessage = document.getElementById('confirmMessage');
+            const confirmYes = document.getElementById('confirmYes');
+            const confirmNo = document.getElementById('confirmNo');
+
+            confirmMessage.textContent = message;
+            confirmDialog.showModal();
+
+            confirmYes.onclick = () => {
+                callback(true);
+                confirmDialog.close();
+            };
+
+            confirmNo.onclick = () => {
+                callback(false);
+                confirmDialog.close();
+            };
+        }
+
+        function handleDeleteAction(seatID, date, timeslot, userID) {
+    // Get the current time
+    const now = new Date();
+
+    // Parse the provided date and timeslot
+    const [startHour, startMinute] = timeslot.split('-')[0].split(':');
+    const scheduleDate = new Date(date);
+    scheduleDate.setHours(startHour, startMinute, 0, 0);
+
+    // Log the date and time being compared
+    console.log('Current date and time:', now);
+    console.log('Schedule start date and time:', scheduleDate);
+
+    // Check if 10 minutes have passed since the start time
+    const tenMinutesLater = new Date(scheduleDate.getTime() + 10 * 60 * 1000);
+    if (now < tenMinutesLater) {
+        alert('You cannot delete this reservation within 10 minutes of the start time.');
+        return;
+    }
+
+    showMessage('Are you sure you want to delete this reservation?', function(confirm) {
+        if (confirm) {
+            fetch('/api/cancel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ seatID, date, timeslot, userID })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Reservation deleted');
+                    location.reload();
+                } else {
+                    alert('Error deleting reservation');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting reservation');
+            });
+        }
+    });
+}
+
+
+        function showEditDialog(seatID, building, date, time, userID, isAnonymous) {
+            const editDialog = document.getElementById('editDialog');
+            const editForm = document.getElementById('editForm');
+
+            document.getElementById('oldDate').value = date;
+            document.getElementById('oldTimeslot').value = time;
+            document.getElementById('oldSeatID').value = seatID;
+            document.getElementById('userIDEdit').value = userID;
+            document.getElementById('isAnonymous').checked = isAnonymous === 'true';
+
+            editForm.editDate.value = date;
+            editForm.editTime.value = time;
+            editForm.editBuilding.value = building;
+            editForm.editSeat.value = seatID;
+
+            editDialog.showModal();
+        }
+
+        function closeEditDialog() {
+            const editDialog = document.getElementById('editDialog');
+            editDialog.close();
+        }
+
+        async function submitEdit() {
+            const editForm = document.getElementById('editForm');
+            const oldDate = document.getElementById('oldDate').value;
+            const oldTimeslot = document.getElementById('oldTimeslot').value;
+            const oldSeatID = document.getElementById('oldSeatID').value;
+            const userID = document.getElementById('userIDEdit').value;
+            const newDate = editForm.editDate.value;
+            const newTimeslot = editForm.editTime.value;
+            const newSeatID = editForm.editSeat.value;
+            const building = editForm.editBuilding.value;
+            const isAnonymous = document.getElementById('isAnonymous').checked;
+
+            const newSeatIdFormatted = `${building}-${newDate}-${newTimeslot}-${newSeatID}`;
+            console.log('Submitting edit with:', { oldDate, oldTimeslot, oldSeatID, newDate, newTimeslot, newSeatIdFormatted, building, userID, isAnonymous });
+
+            try {
+                const response = await fetch('/api/editReservation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        oldDate, oldTimeslot, oldSeatID,
+                        newDate, newTimeslot, newSeatID: newSeatIdFormatted,
+                        userID, isAnonymous
+                    })
+                });
+
+                const result = await response.json();
+                console.log('Edit Result:', result);
+                if (result.success) {
+                    location.reload();
+                } else {
+                    document.getElementById('editError').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error editing reservation:', error);
+                document.getElementById('editError').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

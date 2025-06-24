@@ -1,0 +1,29 @@
+{
+  "name": "ccapdev-phase1-group10",
+  "version": "1.0.0",
+  "description": "phase2",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Group10",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "connect-flash": "^0.1.1",
+    "connect-mongo": "^5.1.0",
+    "cookie-parser": "^1.4.6",
+    "express": "^4.21.2",
+    "express-fileupload": "^1.5.1",
+    "express-flash": "^0.0.2",
+    "express-session": "^1.18.0",
+    "hbs": "^4.2.0",
+    "mongodb": "^6.8.0",
+    "mongoose": "^8.5.1",
+    "node-schedule": "^2.1.1",
+    "path": "^0.12.7"
+  }
+}

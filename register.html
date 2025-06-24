@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap'>
+
+  <style>
+    * {
+      font-family: "Poppins";
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-image: url('html/GeneralIMG/StandardBG.png');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-position: center;
+    }
+    
+    .screen-1 {
+      width: 90%;
+      max-width: 400px;
+      background: #f1f7fe;
+      padding: 2em;
+      border-radius: 30px;
+      box-shadow: 0 0 2em #e6e9f9;
+    }
+    
+    .logo {
+      display: block;
+      margin: 0 auto;
+      width: 100%;
+      max-width: 200px;
+    }
+    
+    .email,
+    .password,
+    .container {
+      margin-bottom: 1.5em;
+    }
+    
+    label {
+      font-weight: 500;
+      color: #4d4d4d;
+    }
+    
+    input[type="email"],
+    input[type="password"],
+    input[type="radio"] {
+      width: 100%;
+      padding: 0.5em;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-top: 0.5em;
+      font-size: 1em;
+      box-shadow: none;
+      outline: none;
+    }
+    
+    .container form h1 {
+      font-size: 1.2em;
+      color: #006937;
+      margin-bottom: 0.5em;
+    }
+    
+    .container label {
+      display: block;
+      cursor: pointer;
+      margin-bottom: 0.5em;
+    }
+    
+    .container label input {
+      position: absolute;
+      left: -9999px;
+    }
+    
+    .container label span {
+      display: flex;
+      align-items: center;
+      padding: 0.375em 0.75em;
+      border-radius: 20px;
+      transition: background-color 0.25s ease;
+      color: #006937;
+      cursor: pointer;
+    }
+    
+    .container label input:checked + span {
+      background-color: #6db282;
+      color: white;
+    }
+    
+    .login {
+      width: 100%;
+      padding: 0.75em;
+      background: #006937;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .footer {
+      text-align: center;
+      font-size: 0.8em;
+      color: #5e5e5e;
+      margin-top: 1em;
+    }
+    
+    .footer a {
+      text-decoration: none;
+      color: #5e5e5e;
+    }
+  </style>
+</head>
+<body>
+  <div class="screen-1">
+    <img class="logo" src="html/GeneralIMG/Logo.png" alt="Logo">
+    <form id="registerForm" action="/register" method="POST" onsubmit="return validateForm()">
+      <div class="email">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="username@dlsu.edu.ph" required />
+        <div id="email-error" class="error" style="display: none;">Email must end with "@dlsu.edu.ph".</div>
+      </div>
+      <div class="password">
+        <label for="password">Password</label>
+        <input id="password" class="pas" type="password" name="password" placeholder="············" required />
+      </div>
+      <div class="password">
+        <label for="confirm-password">Confirm Password</label>
+        <input id="confirmPassword" class="pas" type="password" name="confirm-password" placeholder="············" required />
+        <div id="password-error" class="error" style="display: none;">Passwords do not match.</div>
+      </div>
+
+      <!-- New Security Question Section -->
+      <div class="security-question">
+        <label for="security-question">Security Question</label>
+        <select id="security-question" name="securityQuestion" required>
+          <option value="" disabled selected>Select a question</option>
+          <option value="pet">What is the name of your first pet?</option>
+          <option value="school">What was the name of your elementary school?</option>
+          <option value="city">In what city were you born?</option>
+          <option value="nickname">What is your childhood nickname?</option>
+          <option value="food">What is your favorite food?</option>
+        </select>
+      </div>
+
+      <div class="security-answer">
+        <label for="security-answer">Answer</label>
+        <input type="text" id="security-answer" name="securityAnswer" placeholder="Your answer" required />
+      </div>
+
+      <div class="container">
+        <h1>Register as:</h1>
+        <label>
+          <input type="radio" name="isTechnician" value="false" checked>
+          <span>Student</span>
+        </label>
+        <label>
+          <input type="radio" name="isTechnician" value="true">
+          <span>Technician</span>
+        </label>
+      </div>
+      <button id="registerButton" class="login" type="submit">Register</button>
+    </form>
+
+    <div class="footer">
+      <a href="login">Log In</a> | <a href="#">Forgot Password?</a>
+    </div>
+    <div class="footer">
+      <a href="index" style="color: #006937;"><b>Back to Homepage</b></a>
+    </div>
+  </div>
+
+  <script>
+    function validateForm() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const emailError = document.getElementById('email-error');
+      const passwordError = document.getElementById('password-error');
+
+      emailError.style.display = 'none';
+      passwordError.style.display = 'none';
+
+      let isValid = true;
+
+      if (!email.endsWith('@dlsu.edu.ph')) {
+        emailError.style.display = 'block';
+        isValid = false;
+      }
+
+      if (password !== confirmPassword) {
+        passwordError.style.display = 'block';
+        isValid = false;
+      }
+
+      return isValid;
+    }
+  </script>
+</body>

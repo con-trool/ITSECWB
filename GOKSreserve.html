@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Seat Reservation</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap'>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap'>
+  <link rel="stylesheet" href="css/reserve.css">
+  <link rel="stylesheet" href="css/login.css">
+  <style>
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .form-group {
+      display: flex; /* Added */
+      flex-direction: row; /* Added */
+      align-items: center; /* Added */
+      margin-bottom: 10px; /* Adjusted */
+    }
+    .form-group label {
+      margin-right: 10px; /* Adjusted */
+    }
+    .form-group select,
+    .form-group input[type="date"] {
+      margin-left: 5px; /* Adjusted */
+      width: 180px;
+    }
+
+    .seats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0px;
+      margin-top: 20px;
+    }
+    .seat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ccc;
+      width: 60px; /* Square dimensions */
+      height: 60px; /* Square dimensions */
+      cursor: pointer;
+      margin: 5px; /* Center the seats */
+    } 
+    .seat.reserved {
+      background-color: #f44336;
+    }
+    .seat img {
+      width: 50px; /* Adjusted size for smaller seats */
+      height: 50px; /* Adjusted size for smaller seats */
+    }
+
+    .seat p {
+      margin-top: 5px;
+      font-size: 10px; /* Adjusted font size for smaller seats */
+    }
+    .bdialog {
+      margin: 5px;
+      padding: 10px 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Seat Reservation</h1>
+    <h2 id="building-name"></h2> 
+    
+    <div class="form-group">
+      <label for="date">Choose a Date:</label>
+      <input type="date" id="date" name="date" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="timeslot">Choose a Timeslot:</label>
+      <select id="timeslot" name="timeslot" required>
+        <option value="7:30-8:00">07:30 - 08:00</option>
+        <option value="8:15-8:45">08:15 - 08:45</option>
+        <option value="9:00-9:30">09:00 - 09:30</option>
+        <option value="9:45-10:15">09:45 - 10:15</option>
+        <option value="10:30-11:00">10:30 - 11:00</option>
+        <option value="11:15-11:45">11:15 - 11:45</option>
+        <option value="12:00-12:30">12:00 - 12:30</option>
+        <option value="12:45-13:15">12:45 - 13:15</option>
+        <option value="13:30-14:00">13:30 - 14:00</option>
+        <option value="14:15-14:45">14:15 - 14:45</option>
+        <option value="15:00-15:30">15:00 - 15:30</option>
+        <option value="15:45-16:15">15:45 - 16:15</option>
+        <option value="16:30-17:00">16:30 - 17:00</option>
+      </select>
+    </div>
+
+    <div class="seats">
+      <!-- Seats will be generated here by JavaScript -->
+    </div>
+    <span style="justify-content: right; display: flex; padding: 30px;">
+      <button class="bdialog" onclick="window.history.back();" style="width: 200px;">Back</button>
+    </span>
+  </div>
+
+  <dialog id="dialog">
+    <h2>Book this Seat?</h2>
+    <p><b>Date</b>: <span id="selectedDate">XX/XX/XXXX</span></p>
+    <p><b>Time</b>: <span id="selectedTime">XX:XX - XX:XX</span></p>
+    <p><b>Building</b>: Goks</p>
+    <p><b>Seat</b>: <span id="selectedSeat">12</span></p>
+    <form>
+      <p style="color: #006937;">Register anonymously?</p>
+      <label>
+        <input type="radio" name="radio" checked="">
+        <span>Yes</span>
+      </label>
+      <label>
+        <input type="radio" name="radio">
+        <span>No</span>
+      </label>
+    </form>
+    <div id="technicianOptions" style="display: none; margin-top: 10px;">
+      <label for="student"><b>Student:</b></label>
+      <select id="student">
+        <option value="">Josheart Adrienne Serrano</option>
+        <option value="">Con Miko Serrano</option>
+        <option value="">Tristan Raphael Pacana</option>
+        <option value="">Charmaine Rosal</option>
+      </select>
+    </div>
+    <br>
+    <button onclick="closeDialog();" aria-label="close" class="x">❌</button>
+    <span style="align-items: center; display: flex; flex-direction: row; justify-content: center; margin-bottom: 50px;">
+        <button onclick="submitsReservation();" class="bdialog">Book</button>
+        <button onclick="closeDialog();" class="bdialog" style="background-color: red;">Cancel</button>
+    </span>
+  </dialog>
+
+  <dialog id="success">
+    <h2>Booked Successfully</h2>
+    <p id="technicianOptions"><b>Student</b>: <span id="student">Josheart Adrienne Serrano</span></p>
+    <p><b>Date</b>: <span id="successDate">XX/XX/XXXX</span></p>
+    <p><b>Time</b>: <span id="successTime">XX:XX - XX:XX</span></p>
+    <p><b>Building</b>: Goks</p>
+    <p><b>Seat</b>: <span id="successSeat">12</span></p>
+    <button onclick="closeSuccessDialog();" aria-label="close" class="x">❌</button>
+    <span style="align-items: center; display: flex; flex-direction: row; justify-content: center; margin-bottom: 50px;">
+      <button onclick="closeSuccessDialog(); submitReservation();" class="bdialog">Close</button>
+    </span>
+  </dialog>
+  
+  <dialog id="guest">
+    <h2>Please Login to Book Seats</h2>
+    <button onclick="closeGuestDialog();" aria-label="close" class="x">❌</button>
+    <span style="align-items: center; display: flex; flex-direction: row; justify-content: center; margin-bottom: 50px;">
+      <button onclick="closeGuestDialog(); location.href='index'" class="bdialog">Go back to Homepage</button>
+    </span>
+  </dialog>
+
+  <dialog id="booked">
+    <h2>This Seat is Already Booked!</h2>
+    <p><b>By</b>: <a href="otherprofile">Josheart Adrienne Serrano</a></p>
+    <p><b>Date</b>: <span id="bookedDate">XX/XX/XXXX</span></p>
+    <p><b>Time</b>: <span id="bookedTime">XX:XX - XX:XX</span></p>
+    <p><b>Building</b>: Goks</p>
+    <p><b>Seat</b>: <span id="bookedSeat">12</span></p>
+    <div id="technicianOptions" style="display: none; margin-top: 10px;">
+      <div style="display: flex; justify-content: center;">
+        <button onclick="" class="bdialog">Edit Reservation</button>
+        <button onclick="" class="bdialog">Delete Reservation</button>
+      </div>
+    </div>
+    <button onclick="closeBookedDialog();" aria-label="close" class="x">❌</button>
+    <span style="align-items: center; display: flex; flex-direction: row; justify-content: center; margin-bottom: 50px;">
+      <button onclick="closeBookedDialog();" class="bdialog">Close</button>
+    </span>
+  </dialog>
+  <script>
+    const seats = Array(20).fill(false).map((seat, index) => index % 8 === 0); // Example: every 8th seat is reserved
+  
+    function displaySeats() {
+      const seatsContainer = document.querySelector('.seats');
+      seatsContainer.innerHTML = '';
+      seats.forEach((seat, index) => {
+        const seatElement = document.createElement('div');
+        seatElement.className = 'seat' + (seat ? ' reserved' : '');
+        seatElement.onclick = () => seat ? showReservedModal(index) : showModal(index);
+        seatElement.innerHTML = `
+          <img src="img/comp.png" alt="Seat">
+          <p>Seat ${index + 1}</p>
+        `;
+        seatsContainer.appendChild(seatElement);
+      });
+    }
+  
+    function showModal(seatIndex) {
+      const dialog = document.getElementById('dialog');
+      const selectedDate = document.getElementById('date').value;
+      const selectedTime = document.getElementById('timeslot').value;
+      document.getElementById('selectedDate').textContent = selectedDate;
+      document.getElementById('selectedTime').textContent = selectedTime;
+      document.getElementById('selectedSeat').textContent = seatIndex + 1;
+  
+      // Check if the user is a technician
+      const userType = localStorage.getItem('userType');
+      const technicianOptions = document.getElementById('technicianOptions');
+      if (userType === 'technician') {
+        technicianOptions.style.display = 'block'; // Show dropdown for technician
+      } else {
+        technicianOptions.style.display = 'none'; // Hide dropdown for non-technician users
+      }
+      
+      dialog.showModal();
+    }
+  
+    function showReservedModal(seatIndex) {
+  const dialog = document.getElementById('booked');
+
+  // Assuming you have a way to get the reservation details
+  const selectedDate = document.getElementById('date').value;
+  const selectedTime = document.getElementById('timeslot').value;
+  document.getElementById('bookedDate').textContent = selectedDate;
+  document.getElementById('bookedTime').textContent = selectedTime;
+  document.getElementById('bookedSeat').textContent = seatIndex + 1;
+
+  // Check if the user is a technician
+  const userType = localStorage.getItem('userType');
+  const technicianOptions = dialog.querySelector('#technicianOptions');
+  if (userType === 'technician') {
+    technicianOptions.style.display = 'block'; // Show options for technician
+  } else {
+    technicianOptions.style.display = 'none'; // Hide options for non-technician users
+  }
+
+  dialog.showModal();
+}
+    
+    function closeDialog() {
+      const dialog = document.getElementById('dialog');
+      dialog.close();
+    }
+  
+    function closeSuccessDialog() {
+      const successDialog = document.getElementById('success');
+      successDialog.close();
+    }
+  
+    function closeBookedDialog() {
+      const successDialog = document.getElementById('booked');
+      successDialog.close();
+    }
+    
+    function closeGuestDialog() {
+      const guestDialog = document.getElementById('guest');
+      guestDialog.close();
+    }
+    
+    function isGuestUser() {
+      const userType = localStorage.getItem('userType');
+      return userType === 'guest';
+    }
+  
+    document.addEventListener('DOMContentLoaded', function() {
+      if (isGuestUser()) {
+        console.log('The user is a guest.');
+        // Perform actions specific to guest users
+      } else {
+        console.log('The user is not a guest.');
+        // Perform other actions
+      }
+    });
+  
+    function submitsReservation() {
+      if (isGuestUser()) {
+        const guestDialog = document.getElementById('guest');
+        guestDialog.showModal();
+        return;
+      }
+      // Perform actions for submitting reservation
+      // For now, just close the dialog and show success dialog
+      const dialog = document.getElementById('dialog');
+      const seatIndex = parseInt(document.getElementById('selectedSeat').textContent) - 1;
+      seats[seatIndex] = true; // Mark the seat as reserved
+      dialog.close();
+      const successDialog = document.getElementById('success');
+      successDialog.showModal();
+      displaySeats(); // Refresh the seats display
+    }
+  
+    function selectSeat(index) {
+      if (seats[index]) return;
+      document.querySelectorAll('.seat').forEach(seat => seat.classList.remove('selected'));
+      document.querySelectorAll('.seat')[index].classList.add('selected');
+    }
+  
+    function submitReservation() {
+      const selectedSeatElement = document.querySelector('.seat.selected');
+      if (!selectedSeatElement) return; // If no seat is selected, return
+  
+      const seatIndex = [...selectedSeatElement.parentNode.children].indexOf(selectedSeatElement);
+      seats[seatIndex] = true; // Mark the seat as reserved
+      
+      displaySeats(); // Refresh the seats display
+    }
+  
+    // Initialize the seats display
+    displaySeats();
+  
+    // Set the minimum date to today and maximum date to 7 days from today
+    const today = new Date();
+    const maxDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const formattedMaxDate = maxDate.toISOString().split('T')[0];
+    const dateInput = document.getElementById('date');
+    dateInput.setAttribute('min', today.toISOString().split('T')[0]);
+    dateInput.setAttribute('max', formattedMaxDate);
+
+    function showReservedModal(seatIndex) {
+  const dialog = document.getElementById('booked');
+
+  // Assuming you have a way to get the reservation details
+  const selectedDate = document.getElementById('date').value;
+  const selectedTime = document.getElementById('timeslot').value;
+  document.getElementById('bookedDate').textContent = selectedDate;
+  document.getElementById('bookedTime').textContent = selectedTime;
+  document.getElementById('bookedSeat').textContent = seatIndex + 1;
+
+  // Check if the user is a technician
+  const userType = localStorage.getItem('userType');
+  const technicianOptions = dialog.querySelector('#technicianOptions');
+  if (userType === 'technician') {
+    technicianOptions.style.display = 'block'; // Show options for technician
+  } else {
+    technicianOptions.style.display = 'none'; // Hide options for non-technician users
+  }
+
+  dialog.showModal();
+}
+
+  </script>
+  </body>
+</html>

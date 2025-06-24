@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>LabSpot - Home</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap'>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-image: url('html/GeneralIMG/StandardBG.png');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-position: center;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+    .header .logo {
+      text-align: center;
+      width: 100%;
+    }
+
+    .header img {
+      height: 80px;
+    }
+
+    .header .profile-icon {
+      font-size: 50px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .header .logout {
+      font-size: 25px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .main-content {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 50px;
+    }
+
+    .box {
+      background-color: rgba(0, 0, 0, 0.6);
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      width: 30%;
+      margin: 0 10px;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+      margin-top: 50px;
+      margin-bottom: 20px;
+      margin-right: 50px;
+    }
+
+    .box:hover {
+      transform: scale(1.08);
+    }
+
+    .box img {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    dialog {
+      padding: 1rem 3rem;
+      background: white;
+      width: 700px;
+      padding-top: 2rem;
+      border-radius: 20px;
+      border: 0;
+      box-shadow: 0 5px 30px 0 rgb(0 0 0 / 10%);
+      animation: fadeIn 1s ease both;
+    }
+
+    dialog::backdrop {
+      animation: fadeIn 1s ease both;
+      background: rgb(255 255 255 / 40%);
+      z-index: 2;
+      backdrop-filter: blur(20px);
+    }
+
+    dialog .x {
+      filter: grayscale(1);
+      border: none;
+      background: none;
+      position: absolute;
+      top: 15px;
+      right: 10px;
+      transition: filter, transform 0.3s ease;
+      cursor: pointer;
+      transform-origin: center;
+    }
+
+    dialog .x:hover {
+      filter: grayscale(0);
+      transform: scale(1.1);
+    }
+
+    dialog h2 {
+      font-weight: 600;
+      font-size: 2rem;
+      padding-bottom: 1rem;
+      text-align: center;
+    }
+
+    dialog p {
+      font-size: 1rem;
+      line-height: 1.3rem;
+      padding: 0.5rem 0;
+    }
+
+    .bdialog {
+      padding: 1em;
+      background: #006937;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      font-weight: 600;
+      padding: 20px;
+      margin-right: 15px;
+    }
+
+    .bdialog:hover {
+      transform: scale(1.08);
+      cursor: pointer;
+    }
+
+    button.primary {
+      display: inline-block;
+      font-size: 0.8rem;
+      color: #fff !important;
+      background: rgb(var(--vs-primary) / 100%);
+      padding: 13px 25px;
+      border-radius: 17px;
+      transition: background-color 0.1s ease;
+      box-sizing: border-box;
+      transition: all 0.25s ease;
+      border: 0;
+      cursor: pointer;
+      box-shadow: 0 10px 20px -10px rgb(var(--vs-primary) / 50%);
+    }
+
+    button.primary:hover {
+      box-shadow: 0 20px 20px -10px rgb(var(--vs-primary) / 50%);
+      transform: translateY(-5px);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .center {
+      display: flex;
+      flex-direction: row; /* Updated to row */
+      justify-content: center;
+      align-items: center;
+    }
+
+    .icon-spacing {
+      margin-right: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  
+  <div class="container">
+    <div class="header">
+      <div class="profile-icon" onclick="checkGuest();">
+        <i class="fa fa-user-circle"></i>
+      </div>
+      <div class="logo">
+        <img src="html/IndexIMG/Logo.png" alt="LabSpot Logo">
+      </div>
+      <div class="logout">
+        <a href="logout" style="color: white; text-decoration: none;" id="logout"><i class="fa fa-sign-out"></i> Logout</a>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="box" onclick="location.href='GOKSreserve'">
+        <img src="img/goks.png" alt="goks">
+        <h3>John Gokongwei Sr. Hall</h3>
+      </div>
+      <div class="box" onclick="location.href='AGreserve'">
+        <img src="img/andrew.png" alt="andrew">
+        <h3>Br. Andrew Gonzales Hall</h3>
+      </div>
+      <div class="box" onclick="location.href='VELreserve'">
+        <img src="img/velasco.png" alt="velasco">
+        <h3>Velasco Hall</h3>
+      </div>
+    </div>
+  </div>
+  <div class="center">
+    <div class="box" onclick="location.href='usersearch'">
+      <h3><i class="fa fa-search icon-spacing"></i>   Search for users</h3>
+    </div>
+    <div class="box" onclick="location.href='freeslotsearch'">
+      <h3><i class="fa fa-search icon-spacing"></i>   Search for free slots</h3>
+    </div>
+  </div>
+
+  <dialog id="guest">
+    <h2>Please Login to Book Seats</h2>
+    <button onclick="closeGuestDialog();" aria-label="close" class="x">❌</button>
+    <span style="align-items: center; display: flex; flex-direction: row; justify-content: center; margin-bottom: 50px;">
+      <button onclick="closeGuestDialog(); location.href='index'" class="bdialog">Go back to Homepage</button>
+    </span>
+  </dialog>
+
+  <script>
+    function closeGuestDialog() {
+      const guestDialog = document.getElementById('guest');
+      guestDialog.close();
+    }
+
+    function checkGuest() {
+      if (isUserLoggedIn()) {
+        location.href = 'userprofile';
+      } else {
+        const guestDialog = document.getElementById('guest');
+        guestDialog.showModal();
+      }
+    }
+
+    function isUserLoggedIn() {
+      return {{#if userId}}true{{else}}false{{/if}};
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelector('.profile-icon').onclick = checkGuest;
+    });
+  </script>
+  
+</body>
+
+</html>

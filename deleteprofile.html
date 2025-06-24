@@ -1,0 +1,256 @@
+<html>
+<head>
+    <title>LabSpot</title>
+    <style>
+        :root {
+            --logo-width: 170px;
+            --home-link-font-size: 20px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('IndexIMG/IndexBG.png') center/cover no-repeat;
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+
+        .top-center-logo {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: var(--logo-width);
+            height: auto;
+        }
+
+        a {
+            position: absolute;
+            font-size: var(--home-link-font-size);
+            color: white;
+            text-decoration: none;
+        }
+
+        .home-link {
+            top: 70px;
+            left: 109px;
+            font-weight: bold;
+        }
+
+        .about-link, .service-link {
+            top: 70px;
+        }
+
+        .user-profile-bar {
+            position: absolute;
+            top: 130px; 
+            left: 0; /* Stick to the left side */
+            width: calc(100% - 370px); /* Full width */
+            height: 60px; 
+            background:#05321d;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding-left: 65px; /* Indent for the text */
+            font-size: 30px; 
+        }
+
+        .button-section {
+            position: absolute;
+            top: 210px;
+            left: 20px;
+            background:#478159;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            height: calc(100% - 300px);
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .button-container button {
+            background: rgba(0, 54, 0, 0.8);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .button-container button:hover {
+            background: rgba(115, 227, 107, 0.8);
+        }
+
+        .user-delete-container {
+            position: absolute;
+            top: 210px;
+            right: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            height: calc(100% - 300px);
+            width: calc(100% - 370px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .form-container {
+            background-color: rgba(0, 54, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        form {
+            width: 100%;
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 5px;
+            color: white;
+        }
+
+        form input[type="text"],
+        form input[type="password"] {
+            width: calc(100% - 16px);
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        form input[type="submit"] {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: red;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 10px;
+        }
+
+        form input[type="submit"]:hover {
+            background:rgb(136, 4, 4);
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            display: none; /* Initially hidden */
+        }
+
+        .logo {
+            position: absolute;
+            top: 40px; /* Adjusted distance from the top */
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .logo img {
+            width: var(--logo-width);
+            height: auto;
+        }
+
+    </style>
+</head>
+<body style="background: url('html/GeneralIMG/StandardBG.png') center/cover no-repeat fixed;">
+    
+    <div class="logo">
+        <img src="html/IndexIMG/Logo.png" alt="LabSpot Logo">
+    </div>
+
+    <a href="#" class="home-link" id="home-link">Home</a> 
+
+    <div class="user-profile-bar">Delete Account</div>
+
+    <div class="button-section">
+        <div class="button-container">
+            <button onclick="window.location.href='userprofile'">User Profile</button>
+            <button onclick="window.location.href='reservation'">Edit/See Reservations</button>
+            <button onclick="window.location.href='deleteprofile'">Delete Account</button>
+        </div>
+    </div>
+
+    <div class="user-delete-container">
+        <div class="form-container">
+            <form id="deleteForm">
+                <label for="email">Email:</label>
+                <input type="text" id="email" name="email" required>
+
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                
+                <input type="submit" value="Delete Account">
+                <p class="error-message" id="error-message">Invalid email or password.</p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const userType = localStorage.getItem('userType');
+            const homeLink = document.getElementById('home-link');
+
+            // Check user type and set the appropriate href for the home link
+            if (userType === 'technician') {
+                homeLink.href = 'technicianmenu'; // Redirect to technician menu
+            } else {
+                homeLink.href = 'menu'; // Redirect to general menu
+            }
+
+            const form = document.getElementById('deleteForm');
+            const errorMessage = document.getElementById('error-message');
+
+            form.addEventListener('submit', async function (event) {
+                event.preventDefault(); // Prevent default form submission
+
+                const formData = new FormData(form);
+                const data = {
+                    email: formData.get('email'),
+                    password: formData.get('password')
+                };
+
+                try {
+                    const response = await fetch('/submit-form', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('Account deleted successfully.');
+                        window.location.href = 'index.html'; // Redirect to index page
+                    } else {
+                        errorMessage.textContent = result.message;
+                        errorMessage.style.display = 'block'; // Show error message
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    errorMessage.style.display = 'block'; // Show error message
+                }
+            });
+        });
+    </script>
+</body>
+</html>

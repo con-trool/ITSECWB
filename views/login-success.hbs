@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Success</title>
+</head>
+<body>
+  <script>
+    localStorage.setItem('userType', '{{#if isTechnician}}technician{{else}}student{{/if}}');
+    window.location.href = '/menu';
+  </script>
+</body>
+</html>

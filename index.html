@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>LabSpot</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap">
+    <meta name="description" content="Free bootstrap template Atlas">
+    <link rel="icon" href="img/favicon.png" sizes="32x32" type="image/png">
+    <!-- custom.css -->
+    <link rel="stylesheet" href="css/custom.css">
+    <!-- bootstrap.min.css -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+	<!-- font-awesome -->
+    <link rel="stylesheet" href="font-awesome-4.7.0/css/font-awesome.min.css">
+    
+    <!-- AOS -->
+    <link rel="stylesheet" href="css/aos.css">
+    
+    <style>
+
+        :root {
+            /*Hand Image*/
+            --hand-image-width: 500px; /* Adjust the width of the hand image */
+            --hand-image-bottom: -11px; /* Distance from the bottom for hand image */
+            --hand-image-right: 0px; /* Distance from the right for hand image */
+    
+            /*Book Now Button*/
+            --button-image-width: 150px; /* Default width of the button image */
+            --button-image-bottom: 170px; /* Distance from the bottom for button image */
+            --button-image-right: 234px; /* Distance from the right for button image */
+        
+        }
+        
+        
+        .bottom-hand-image {
+            position: absolute;
+            bottom: var(--hand-image-bottom);
+            right: var(--hand-image-right);
+            width: var(--hand-image-width);
+            height: auto;
+        }
+
+        @media (max-width: 768px) {
+            /* Adjust the positioning for smaller screens */
+            .bottom-hand-image {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                width: 100%; /* Ensure full width on smaller screens */
+                margin-top: 20px; /* Add margin for spacing */
+            }
+        }
+
+        .button-image {
+            position: absolute;
+            bottom: var(--button-image-bottom);
+            right: var(--button-image-right);
+            width: var(--button-image-width);
+            height: auto;
+            z-index: 1; /* Ensures the button image is in front */
+            transition: filter 0.3s; /* Smooth transition for hover effect */
+        }
+
+        .button-image:hover {
+            filter: brightness(0.6); /* Darken the image on hover */
+        }
+
+        .login-button {
+            position: absolute;
+            top: 630px; /* Adjusted position */
+            left: 15px; /* Adjusted position */
+            width: var(--button-image-width);
+            height: auto;
+            z-index: 1;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background: linear-gradient(135deg, #05321d, #478159);
+            cursor: pointer;
+            transition: filter 0.3s;
+            font-family: 'Poppins', sans-serif; /* Use Poppins font */
+        }
+
+        .login-button:hover {
+            filter: brightness(0.8);
+        }
+
+        .signup-button {
+            position: absolute;
+            top: 630px; /* Adjusted position */
+            left: 200px; /* Adjusted position */
+            width: var(--button-image-width);
+            height: auto;
+            z-index: 1;
+            border: 1px solid white; /* Thin white outline */
+            background-color: transparent; /* Transparent background */
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            cursor: pointer;
+            transition: filter 0.3s;
+            font-family: 'Poppins', sans-serif; /* Use Poppins font */
+        }
+
+        .signup-button:hover {
+            filter: brightness(0.8);
+        }
+
+        .fullscreen-bg {
+            height: 100vh;
+        }   
+
+
+    </style>
+
+</head>
+
+<body>
+    <!-- banner -->
+    <div class="jumbotron jumbotron-fluid" id="banner" style="background-image: url('html/GeneralIMG/StandardBG.png');">
+
+        <div class="container text-center text-md-left">
+            <header>
+                <div class="row justify-content-between">
+                    <div style="height: 100px; width: 300px; overflow: visible;" class="col-2">
+                            <a href="/index"> <img src="html/IndexIMG/Logo.png" alt="LabSpot Logo"></a>
+                    </div>
+                    
+                    <div class="col-6 align-self-center text-right">
+                        <a href="#about" style="border-right: 10px; padding: 80px;" class="text-white lead"><b>About</b></a>
+                        <a href="#service" class="text-white lead"><b>Service</b></a>
+                    </div>
+                </div>
+            </header>
+            <h1 data-aos="fade" data-aos-easing="linear" data-aos-duration="1000" data-aos-once="true" class="display-3 text-white font-weight-bold my-5">
+                Quick, Easy, & <br>Hassle-<span style="color: #6db282;">free</span><br> booking.
+            </h1>
+            
+            <p data-aos="fade" data-aos-easing="linear" data-aos-duration="1000" data-aos-once="true" class="lead text-white my-4">
+                <br>Your ultimate destination for hassle-free computer lab seat <br>bookings. Reserve your spot with ease. Your seat is just a <br>click away!
+            </p>
+            <button onclick="location.href='login'" data-aos="fade" data-aos-easing="linear" data-aos-duration="1000" data-aos-once="true" class="login-button">Login</button>
+            <button onclick="location.href='register'" data-aos="fade" data-aos-easing="linear" data-aos-duration="1000" data-aos-once="true" class="signup-button">Sign-Up</button><br>
+            
+            <br><br><br><br>
+            <a href="/menu?guest=true" id="continueAsGuest" style="color:#ffffff;">Continue as guest?</a>
+            </br>
+
+            <script>
+                document.getElementById('continueAsGuest').addEventListener('click', function(event) {
+                    // Prevent the default action (navigation) from occurring immediately
+                    event.preventDefault();
+        
+                    // Store a variable (example: storing a string "guest" in local storage)
+                    localStorage.setItem('userType', 'guest');
+        
+                    // Optionally, you can redirect to the new page after storing the variable
+                    window.location.href = this.href;
+                });
+            </script>
+
+        </div>
+    </div>
+    <!-- Hand Image -->
+    <img src="img/IndexHandIMG.png" alt="Hand Image" class="bottom-hand-image">
+    
+    <a href="login">
+        <img src="img/BookNowButton.png" alt="Book Now Button" class="button-image">
+    </a>
+
+    <!-- about -->
+     <div>
+    <div class="jumbotron jumbotron-fluid feature" id="feature-first">
+        <div class="container my-5" >
+            <div class="row justify-content-between text-center text-md-left" id="about">
+                <div data-aos="fade-right" data-aos-duration="1000" data-aos-once="true" class="col-md-6">
+                    <h2 class="font-weight-bold" id="about"style="color: white;">ABOUT US</h2>
+                    <p class="my-4" style="color: white;"> Welcome to LabSpot! <br><br>
+                        Our mission is to provide a seamless and efficient way for students, 
+                        educators, and professionals to reserve their spot in our state-of-the-art 
+                        computer labs. Whether you need a quiet place to study, access to 
+                        specialized software, or a collaborative space for your project team, 
+                        we've got you covered.</p>
+                    <a href="#" class="btn my-4 font-weight-bold atlas-cta cta-green">Learn More</a>
+                </div>
+                <div data-aos="fade-left" data-aos-duration="1000" data-aos-once="true" class="col-md-6 align-self-center">
+                    <img src="img/feature-1.png" alt="About" class="mx-auto d-block" style="max-width: 50%; height: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- feature (green background) -->
+    <div class="jumbotron jumbotron-fluid feature" id="feature-last" style="padding-top: 20px;">
+        <div class="container">
+            <div class="row justify-content-between text-center text-md-left">
+                <div data-aos="fade-left" data-aos-duration="1000" data-aos-once="true" class="col-md-6 flex-md-last">
+                    <h2 class="font-weight-bold" style="color: white;" >NPMs used</h2>
+                    <p class="my-4" style="color: white;">
+                        •express <br>
+                        •express-session<br>
+                        •cookie-parser<br>
+                        •bcrypt<br>
+                        •connect-mongo <br>
+                        •mongoose<br>
+                        •mongodb<br>
+                        •file-upload<br>
+                        •path<br>
+                        •body-parser <br>
+                        •hbs
+                    </p>
+                    <a href="#" class="btn my-4 font-weight-bold atlas-cta cta-green" >Learn More</a>
+                </div>
+                <div data-aos="fade-right" data-aos-duration="1000" data-aos-once="true" class="col-md-6 align-self-center flex-md-first">
+                    <img src="img/feature-2.png" alt="Check" class="mx-auto d-block" style="max-width: 50%; height: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- three-block -->
+    <div class="container-fluid fullscreen-bg" style="    background-image: url('html/GeneralIMG/StandardBG.png');
+                                                                                background-size: cover;
+                                                                                background-repeat: no-repeat;
+                                                                                background-attachment: fixed;
+                                                                                background-position: center;
+                                                                                color: white;
+                                                                                   "id="service"> 
+        <br><br><br>
+        <h2 class="text-center font-weight-bold my-5" style="color: #fff;">What We Offer</h2>
+        <br><br><br>
+        <div class="row">
+            <div data-aos="fade-up" data-aos-delay="0" data-aos-duration="1000" data-aos-once="true" class="col-md-4 text-center">
+                <img src="img/smart-protect-1.png" alt="Reserve" class="mx-auto img-fluid">
+                <br><h4 style="color: #fff;">Easy Reservations</h4><br>
+                <p style="color: #fff;">Book your seat in just a few clicks.<br> Our user-friendly interface 
+                    makes it simple to find and reserve a workstation that suits your 
+                    needs.</p>
+            </div>
+            <div data-aos="fade-up" data-aos-delay="200" data-aos-duration="1000" data-aos-once="true" class="col-md-4 text-center">
+                <img src="img/smart-protect-2.png" alt="Calendar" class="mx-auto img-fluid">
+                <br><h4 style="color: #fff;">Flexible Scheduling</h4><br>
+                <p style="color: #fff;"> Choose from a variety of time slots that fit your schedule, with options for single-use or recurring reservations.</p>
+            </div>
+            <div data-aos="fade-up" data-aos-delay="400" data-aos-duration="1000" data-aos-once="true" class="col-md-4 text-center">
+                <img src="img/smart-protect-3.png" alt="Buildings" class="mx-auto img-fluid">
+                <br><h4 style="color: #fff;">Modern Facilities</h4><br>
+                <p style="color: #fff;"> Our computer labs are equipped with the latest technology, high-speed internet, and all the software tools you need to succeed.</p>
+            </div>
+        </div>
+    </div>
+
+
+  
+
+
+    <div class="container-top"> <!-- Back to Top button -->
+        <a href="#" class="top"></a>
+      </div>
+   
+    <!-- AOS -->
+    <script src="js/aos.js"></script>
+
+    <script>
+            AOS.init({
+            });
+            window.addEventListener('scroll', function() {
+            var scrollPosition = window.scrollY;
+
+            if (scrollPosition > 300) { // Adjust this value to control when the button appears
+                document.querySelector('.container-top').classList.add('active');
+            } else {
+                document.querySelector('.container-top').classList.remove('active');
+            }
+          });
+
+        document.getElementById('backToTop').addEventListener('click', function(event) {
+            event.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+    });
+});
+    </script>
+</body>
+
+</html>

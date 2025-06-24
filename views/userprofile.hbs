@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>LabSpot - User Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+         :root {
+            --logo-width: 170px;
+            --home-link-font-size: 20px;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url('/html/GeneralIMG/StandardBG.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .top-center-logo {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 170px;
+            height: auto;
+        }
+
+        .home-link, .about-link, .service-link {
+            position: absolute;
+            font-size: 20px;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .home-link {
+            font-size: 20px;
+            font-weight: bold;
+            top: 70px;
+            left: 109px;
+        }
+
+        .user-profile-bar {
+            position: absolute;
+            top: 130px;
+            left: 0;
+            width: 96.1%;
+            height: 60px;
+            background: #05321d;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding-left: 65px;
+            font-size: 30px;
+        }
+
+        .button-section {
+            position: absolute;
+            top: 210px;
+            left: 20px;
+            background-color: #478159;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            height: calc(100% - 300px);
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .button-container button {
+            background-color: rgba(0, 54, 0, 0.8);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-container button:hover {
+            background-color: rgba(115, 227, 107, 0.8);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            margin-top: 150px; /* Adjusted to make space for the header */
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .header .logo {
+            text-align: center;
+            width: 40px;
+        }
+
+        .header img {
+            height: 20px;
+        }
+
+        .header .back-button {
+            font-size: 25px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .profile-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: center;
+            opacity: 0; /* Initially set opacity to 0 */
+            transition: opacity 0.5s ease-in-out; /* Add transition effect */
+            width: 1000px;
+        }
+
+        .box {
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .profile-avatar-wrapper {
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .avatar {
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+
+        .profile-details {
+            margin: 10px 0;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .profile-details h2 {
+            margin-bottom: 20px;
+            font-size: 32px;
+            color: #ffffff;
+        }
+
+        .profile-details p {
+            margin: 20px 0;
+            font-size: 20px;
+            color: #ffffff;
+        }
+
+        .profile-details a {
+            color: #ea6153;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .profile-details a:hover {
+            text-decoration: underline;
+        }
+
+        .profile-links {
+            margin-top: 30px;
+        }
+
+        .profile-links h3 {
+            font-size: 24px;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .profile-links p {
+            color: #ffffff;
+            font-size: 20px;
+        }
+          .logo {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .logo img {
+            width: var(--logo-width);
+            height: auto;
+        }
+    </style>
+     <div class="logo">
+        <img src="/html/IndexIMG/Logo.png" alt="LabSpot Logo">
+    </div>
+</head>
+
+<body>
+   
+
+    <div class="home-link" id="home-link">Home</div>
+
+    <div class="user-profile-bar">{{#if user.isTechnician}}Technician Profile{{else}}User Profile{{/if}}</div>
+
+    <div class="button-section">
+        <div class="button-container">
+            <button onclick="window.location.href='/edituserpage'">Edit Profile</button>
+            <button onclick="window.location.href='/reservation'">Edit/See Reservations</button>
+            <button onclick="window.location.href='/deleteprofile'">Delete Account</button>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="profile-section">
+            <div class="box">
+                <div class="image-block">
+                    <div class="profile-avatar-wrapper">
+                        <div class="avatar" style="background-image: url('{{user.image}}');"></div>
+                    </div>
+                    <div class="profile-details">
+                        <h2>{{user.name}}</h2>
+                        <p><b>Email:</b> <a href="mailto:{{user.username}}">{{user.username}}</a></p>
+                        <p><b>College:</b> {{user.college}}</p>
+                        <p><b>Course Program:</b> {{user.program}}</p>
+                        <h2>About Me:</h2>
+                        <p>{{user.description}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript to trigger the animation when the page loads
+        document.addEventListener("DOMContentLoaded", function () {
+            // Wait for a short delay to start animation
+            setTimeout(function () {
+                document.querySelector(".profile-section").style.opacity = "1";
+            }, 100);
+        });
+
+        function goBack() {
+            window.history.back();
+        }
+
+        // Ensure the home link goes to the correct menu
+        document.getElementById('home-link').addEventListener('click', function () {
+           window.location.href = '/menu';
+        });
+    </script>
+</body>
+
+</html>
