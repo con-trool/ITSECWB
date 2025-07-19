@@ -181,8 +181,24 @@
         </div>
       </div>
       {{#if error}}
-      <div class="error-message">{{error}}</div>
+        <div class="error-message" id="login-error">{{error}}</div>
+
+        <!-- Lockout Popup -->
+        <dialog id="lockout-dialog">
+          <h3 style="color: darkred; font-weight: bold;">Account Locked</h3>
+          <p>{{error}}</p>
+          <button onclick="document.getElementById('lockout-dialog').close()">OK</button>
+        </dialog>
+
+        <script>
+          const errorText = `{{error}}`;
+          if (errorText.toLowerCase().includes('locked')) {
+            const dialog = document.getElementById('lockout-dialog');
+            if (dialog) dialog.showModal();
+          }
+        </script>
       {{/if}}
+
       <div class="form-group form-check">
         <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe" {{#if credentials.email}}checked{{/if}}>
         <label class="form-check-label" for="rememberMe">Remember Me</label>
