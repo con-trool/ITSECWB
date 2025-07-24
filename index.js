@@ -828,6 +828,19 @@ app.post('/submit-student-data', function (req, res) {
   var name = req.body.firstName + " " + req.body.lastName;
   res.send(name + " obtained");
 });
+app.post("/change-password", async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const user = await User.findById(req.session.userId); // or however you're tracking session
+
+  const match = await bcrypt.compare(currentPassword, user.password);
+  if (!match) return res.json({ success: false });
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  user.password = hashed;
+  await user.save();
+
+  res.json({ success: true });
+});
 
 const buildings = {
   'Br. Andrew Gonzales': 40,
