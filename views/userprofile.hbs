@@ -318,6 +318,16 @@
   });
 });
 
+ document.addEventListener('DOMContentLoaded', function() {
+        const userType = localStorage.getItem('userType');
+        const homeLink = document.getElementById('home-link');
+
+        if (userType === 'technician') {
+            homeLink.href = '/technicianmenu';
+        } else {
+            homeLink.href = '/menu';
+        }
+    });
   </script>
 </body>
 </html>
