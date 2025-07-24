@@ -5,12 +5,12 @@ const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
-    maxlength: 100 // Enforce email max length
+    maxlength: 100
   },
   password: {
     type: String,
     required: true,
-    maxlength: 64, // Enforce hashed password length (safe margin)
+    maxlength: 64
   },
   name: String,
   college: String,
@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
   securityAnswer: {
     type: String,
     required: true,
-    maxlength: 100 // Enforce max answer length
+    maxlength: 100
   },
   failedLoginAttempts: {
     type: Number,
@@ -33,10 +33,24 @@ const userSchema = new mongoose.Schema({
     default: null
   },
   passwordHistory: {
-    type: [String],  // Array of hashed passwords
+    type: [String],
     default: []
   },
+  lastPasswordChange: {
+    type: Date,
+    default: Date.now
+  },
+  lastLoginAttempt: {
+  type: Date,
+  default: null
+  },
+  lastLoginSuccess: {
+    type: Boolean,
+    default: null
+  }
+
 });
+
 
 
 

@@ -95,28 +95,39 @@ const allowGuest = (req, res, next) => {
   }
   next();
 };
+
 app.get('/menu', allowGuest, async (req, res) => {
   try {
     let user;
     if (req.isGuest) {
-      user = { userID: 1, isTechnician: false, name: 'Guest' }; // Guest user details
+      user = { userID: 1, isTechnician: false, name: 'Guest' };
       console.log('Accessing menu as guest');
     } else {
       user = await User.findById(req.session.userId);
-      if (!user) {
-        return res.redirect('/login');
-      }
+      if (!user) return res.redirect('/login');
     }
+
     const userId = user.userID;
     const isTechnician = user.isTechnician;
-    console.log('User ID:', userId);
-    console.log('Is Technician:', isTechnician);
-    res.render('menu', { userId, isTechnician, isGuest: req.isGuest });
+
+    // ✅ Pull last login info from session (if available)
+    const lastLoginInfo = req.session.lastLoginAttempt || null;
+
+    // ✅ Optional: clear it after displaying once
+    delete req.session.lastLoginAttempt;
+
+    res.render('menu', {
+      userId,
+      isTechnician,
+      isGuest: req.isGuest,
+      lastLoginInfo // ✅ pass it to template
+    });
   } catch (error) {
     console.error('Error fetching user data:', error);
     res.status(500).send('Server error');
   }
 });
+
 
 app.get('/GOKSreserve', allowGuest, async (req, res) => {
   try {
@@ -215,50 +226,77 @@ app.get('/login', function (req, res) {
 });
 
 app.post('/login', async (req, res) => {
-  const { email, password, rememberMe, name } = req.body;
+  const { email, password, rememberMe } = req.body;
+
   try {
     const user = await User.findOne({ username: email });
 
-    // Check if user exists
+    // If no user found, return error (do NOT store last attempt since user doesn't exist)
     if (!user) {
-      return res.render('login', { error: 'Invalid email or password.' });
+      return res.render('login', {
+        error: 'Invalid email or password.',
+        credentials: { email, password }
+      });
     }
 
-    // User exists, now compare passwords
+    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
+
+    // Log the attempt
+    user.lastLoginAttempt = new Date();
+    user.lastLoginSuccess = isMatch;
+    await user.save();
+
+    // Handle failed login
     if (!isMatch) {
-      return res.render('login', { error: 'Invalid email or password.' });
+      return res.render('login', {
+        error: 'Invalid email or password.',
+        credentials: { email, password }
+      });
     }
 
-    // Set session variables upon successful login
+    // Successful login
     req.session.userId = user._id.toString();
     req.session.isTechnician = user.isTechnician;
 
-    // Set cookie if "Remember Me" is checked
+    // Optional: store login info in session to display after redirect
+    req.session.lastLoginAttempt = {
+      date: user.lastLoginAttempt,
+      success: user.lastLoginSuccess
+    };
+
+    // Handle rememberMe
     if (rememberMe) {
-      res.cookie('rememberMe', { email, password }, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true }); // 30 days
+      res.cookie('rememberMe', { email, password }, {
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        httpOnly: true
+      });
     } else {
       res.clearCookie('rememberMe');
     }
 
-    // Render different pages based on user type
-    if (user.isTechnician) {
-      res.redirect('/technicianpage');
-    } else {
-      res.redirect('/menu');
-    }
+    // Redirect based on user type
+    return user.isTechnician ? res.redirect('/technicianpage') : res.redirect('/menu');
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).send('Server error');
   }
 });
 
+
+
 app.get('/technicianpage', isAuthenticated, async (req, res) => {
   try {
-    const seats = await Seat.find({ isAvailable: false }).exec();
-    const users = await User.find({}).exec(); // Fetch all users
+    // Fetch the currently logged-in user
+    const currentUser = await User.findById(req.session.userId).exec();
 
-    // Create a map of users for easy lookup
+    // Fetch seat reservations
+    const seats = await Seat.find({ isAvailable: false }).exec();
+
+    // Fetch all users
+    const users = await User.find({}).exec();
+
+    // Map users by their userID for quick access in the template
     const usersMap = users.reduce((map, user) => {
       if (user.userID) {
         map[user.userID.toString()] = user;
@@ -270,15 +308,23 @@ app.get('/technicianpage', isAuthenticated, async (req, res) => {
     console.log('Users:', usersMap);
 
     res.render('technicianpage', {
-      user: req.session.user,
-      seats: seats,
-      users: usersMap // Pass usersMap to the template
-    });
+    user: req.session.user,
+    seats: seats,
+    users: usersMap,
+    lastLoginInfo: {
+      date: currentUser?.lastLoginAttempt 
+        ? currentUser.lastLoginAttempt.toLocaleString()  // 👈 format the date
+        : null,
+      success: currentUser?.lastLoginSuccess
+    }
+  });
+
   } catch (error) {
     console.error('Error fetching reservations:', error);
     res.status(500).send('Server error');
   }
 });
+
 
 app.get('/register', function (req, res) {
   res.render('register');
@@ -411,7 +457,18 @@ app.post('/forgot/reset-password', async (req, res) => {
     const user = await User.findOne({ username: email });
     if (!user) return res.json({ success: false });
 
-    // Check password reuse
+    // Check if password was changed within the last 24 hours
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); //change to - 1 * 60 * 1000 for cquick check it's 1 minute
+
+    if (user.lastPasswordChange > oneDayAgo) {
+      return res.json({
+        success: false,
+        message: "Password was recently changed. You can only change your password once every 24 hours."
+      });
+    }
+
+    // Check for password reuse
     for (const oldHashed of user.passwordHistory) {
       const isReused = await bcrypt.compare(newPassword, oldHashed);
       if (isReused) {
@@ -424,11 +481,11 @@ app.post('/forgot/reset-password', async (req, res) => {
 
     const hashed = await bcrypt.hash(newPassword, 10);
 
-    // Update password and push to history
     user.password = hashed;
+    user.lastPasswordChange = now; // ⏰ Set timestamp of last password change
     user.passwordHistory.push(hashed);
 
-    // Limit history to last 5 passwords
+    // Keep only the last 5 password hashes
     if (user.passwordHistory.length > 5) {
       user.passwordHistory = user.passwordHistory.slice(-5);
     }
@@ -440,6 +497,7 @@ app.post('/forgot/reset-password', async (req, res) => {
     res.status(500).send("Internal server error");
   }
 });
+
 
 
 
