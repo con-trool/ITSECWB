@@ -168,6 +168,34 @@
       text-decoration: none;
       color: #5e5e5e;
     }
+
+    .password-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .password-container input {
+      width: 100%;
+      padding-right: 2.5em;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 0.75em;
+      cursor: pointer;
+      color: #666;
+      font-size: 1.2em;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 0.9em;
+      margin-top: 4px;
+      display: none;
+    }
+
+
   </style>
 </head>
 <body>
@@ -180,7 +208,11 @@
       <div id="email-exists-error" class="error" style="display: none;">Email already registered.</div>
 
       <label for="password">Password</label>
-      <input id="password" type="password" name="password" required />
+      <div class="password-container">
+        <input id="password" type="password" name="password" required />
+        <ion-icon class="toggle-password" name="eye-off-outline" onclick="togglePassword('password', this)"></ion-icon>
+      </div>
+
 
       <ul id="password-rules">
         <li id="rule-length" class="rule-item">At least 8 characters</li>
@@ -191,8 +223,11 @@
       </ul>
 
       <label for="confirmPassword">Confirm Password</label>
-      <input id="confirmPassword" type="password" name="confirmPassword" required />
-      <div id="password-error" class="error" style="display: none;">Passwords do not match.</div>
+      <div class="password-container">
+        <input id="confirmPassword" type="password" name="confirmPassword" required />
+        <ion-icon class="toggle-password" name="eye-off-outline" onclick="togglePassword('confirmPassword', this)"></ion-icon>
+      </div>
+      <p id="passwordMismatchError" class="error-message">Passwords do not match.</p>
 
       <label for="securityQuestion"><br>Security Question</label>
       <select id="securityQuestion" name="securityQuestion" required>
@@ -354,6 +389,43 @@
         window.location.href = '/login';
       });
     });
+
+    function togglePassword(id, icon) {
+      const input = document.getElementById(id);
+      if (input.type === "password") {
+        input.type = "text";
+        icon.name = "eye-outline";
+      } else {
+        input.type = "password";
+        icon.name = "eye-off-outline";
+      }
+    }
+
+    function validatePasswordMatchOnBlur() {
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirmPassword').value;
+    const error = document.getElementById('passwordMismatchError');
+
+    if (confirm && password !== confirm) {
+      error.style.display = 'block';
+    }
+  }
+
+    function validatePasswordMatchOnInput() {
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirmPassword').value;
+      const error = document.getElementById('passwordMismatchError');
+
+      if (password === confirm) {
+        error.style.display = 'none';
+      }
+    }
+
+    document.getElementById('confirmPassword').addEventListener('blur', validatePasswordMatchOnBlur);
+    document.getElementById('confirmPassword').addEventListener('input', validatePasswordMatchOnInput);
+    document.getElementById('password').addEventListener('input', validatePasswordMatchOnInput);
+
+
   </script>
 </body>
 </html>

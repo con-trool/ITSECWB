@@ -147,6 +147,32 @@
       color: #006937;
     }
 
+    .password-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .password-container input {
+      width: 100%;
+      padding-right: 2.5em;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 0.5em;
+      cursor: pointer;
+    }
+
+    .toggle-password-active {
+      padding: 0.5em;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-top: 0.5em;
+      font-size: 1em;
+      box-shadow: none;
+      outline: none;
+    }
 
 
   </style>
@@ -161,8 +187,12 @@
       </div>
       <div class="password">
         <label for="password">Password</label>
-        <input id="password" class="pas" type="password" name="password" placeholder="············" required />
+        <div class="password-container">
+          <input id="password" class="pas" type="password" name="password" placeholder="············" required />
+          <ion-icon class="toggle-password" name="eye-off-outline" onclick="togglePassword('password', this)"></ion-icon>
+        </div>
       </div>
+
       <div class="password-policy" style="font-size: 0.75em; color: #555; margin-top: 0.5em;">
       <ul id="password-rules" style="padding-left: 0; font-size: 0.85em; margin-top: 0.5em;">
         <li id="rule-length" class="rule-item invalid">At least 8 characters</li>
@@ -178,7 +208,10 @@
 
       <div class="password">
         <label for="confirm-password">Confirm Password</label>
-        <input id="confirmPassword" class="pas" type="password" name="confirmPassword" placeholder="············" required />
+        <div class="password-container">
+          <input id="confirmPassword" class="pas" type="password" name="confirmPassword" placeholder="············" required />
+          <ion-icon class="toggle-password" name="eye-off-outline" onclick="togglePassword('confirmPassword', this)"></ion-icon>
+        </div>
         <div id="password-error" class="error" style="display: none;">Passwords do not match.</div>
       </div>
 
@@ -275,6 +308,19 @@
         const el = document.getElementById(id);
         el.classList.toggle('valid', valid);
         el.classList.toggle('invalid', !valid);
+      }
+
+      function togglePassword(id, icon) {
+        const input = document.getElementById(id);
+        if (input.type === "password") {
+          input.type = "text";
+          icon.name = "eye-outline";
+          input.classList.add("toggle-password-active");
+        } else {
+          input.type = "password";
+          icon.name = "eye-off-outline";
+          input.classList.remove("toggle-password-active");
+        }
       }
     </script>
 

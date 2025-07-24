@@ -411,16 +411,38 @@ app.post('/forgot/reset-password', async (req, res) => {
     const user = await User.findOne({ username: email });
     if (!user) return res.json({ success: false });
 
-    const hashed = await bcrypt.hash(newPassword, 10); // Optional but recommended
-    user.password = hashed;
-    await user.save();
+    // Check password reuse
+    for (const oldHashed of user.passwordHistory) {
+      const isReused = await bcrypt.compare(newPassword, oldHashed);
+      if (isReused) {
+        return res.json({
+          success: false,
+          message: "This password has already been used. Please create a unique password."
+        });
+      }
+    }
 
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    // Update password and push to history
+    user.password = hashed;
+    user.passwordHistory.push(hashed);
+
+    // Limit history to last 5 passwords
+    if (user.passwordHistory.length > 5) {
+      user.passwordHistory = user.passwordHistory.slice(-5);
+    }
+
+    await user.save();
     res.json({ success: true });
   } catch (error) {
     console.error("Error resetting password:", error);
     res.status(500).send("Internal server error");
   }
-});   
+});
+
+
+
 // Logout route
 app.get('/logout', (req, res) => {
   req.session.destroy((err) => {
