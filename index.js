@@ -214,182 +214,133 @@ app.get('/login', function (req, res) {
   res.render('login', { credentials });
 });
 
-  app.post('/login', async function (req, res) {
-  const { email, password, rememberMe } = req.body;
-
+app.post('/login', async (req, res) => {
+  const { email, password, rememberMe, name } = req.body;
   try {
     const user = await User.findOne({ username: email });
 
+    // Check if user exists
     if (!user) {
-      return res.render('login', {
-        credentials: { email },
-        error: 'Invalid email or password.'
-      });
+      return res.render('login', { error: 'Invalid email or password.' });
     }
 
-    // Lockout check
-    if (user.lockUntil && user.lockUntil > new Date()) {
-    const remainingMs = user.lockUntil - new Date();
-    const remainingMin = Math.ceil(remainingMs / 60000);
-    const remaining = remainingMin >= 60
-      ? `${Math.floor(remainingMin / 60)} hour(s)`
-      : `${remainingMin} minute(s)`;
-
-    return res.render('login', {
-      credentials: { email },
-      error: `Account is locked due to 5 failed attempts. Try again in ${remaining}.`
-    });
-  }
-
+    // User exists, now compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.render('login', { error: 'Invalid email or password.' });
+    }
 
-      if (!isMatch) {
-        user.failedLoginAttempts += 1;
-
-        if (user.failedLoginAttempts >= 5) {
-          user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 min
-          await user.save();
-          return res.render('login', {
-            credentials: { email },
-            error: 'Too many failed attempts. Account locked for 15 minutes.'
-          });
-        }
-
-        await user.save();
-        return res.render('login', {
-          credentials: { email },
-          error: `Invalid credentials. Attempts left: ${5 - user.failedLoginAttempts}`
-        });
-      }
-      console.log('Failed attempts:', user.failedLoginAttempts);
-      console.log('LockUntil:', user.lockUntil);
-
-
-    // Successful login: reset counters
-    user.failedLoginAttempts = 0;
-    user.lockUntil = null;
-    await user.save();
-
+    // Set session variables upon successful login
     req.session.userId = user._id.toString();
     req.session.isTechnician = user.isTechnician;
-    req.session.user = user;
 
+    // Set cookie if "Remember Me" is checked
     if (rememberMe) {
-      res.cookie('rememberMe', { email, password }, {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: true
-      });
+      res.cookie('rememberMe', { email, password }, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true }); // 30 days
     } else {
       res.clearCookie('rememberMe');
     }
 
-    res.redirect('/menu');
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).render('login', {
-      credentials: { email },
-      error: 'Server error. Please try again later.'
-    });
+    // Render different pages based on user type
+    if (user.isTechnician) {
+      res.redirect('/technicianpage');
+    } else {
+      res.redirect('/menu');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).send('Server error');
   }
 });
 
-
-app.post('/login', async function (req, res) {
-  const { email, password, rememberMe } = req.body;
-
-  // Initialize tracking if not yet set
-  if (!loginAttempts[email]) {
-    loginAttempts[email] = { count: 0, lockUntil: null };
-  }
-
-  // Check if temporarily locked
-  if (loginAttempts[email].lockUntil && loginAttempts[email].lockUntil > Date.now()) {
-    const remainingMs = loginAttempts[email].lockUntil - Date.now();
-    const remainingMin = Math.ceil(remainingMs / 60000);
-    return res.render('login', {
-      credentials: { email },
-      error: `Too many failed attempts. Please try again in ${remainingMin} minute(s).`
-    });
-  }
-
+app.get('/technicianpage', isAuthenticated, async (req, res) => {
   try {
-    const user = await User.findOne({ username: email });
+    const seats = await Seat.find({ isAvailable: false }).exec();
+    const users = await User.find({}).exec(); // Fetch all users
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      loginAttempts[email].count += 1;
-
-      // Lock for 15 minutes if 5+ failed
-      if (loginAttempts[email].count >= 5) {
-        loginAttempts[email].lockUntil = Date.now() + 15 * 60 * 1000;
-        return res.render('login', {
-          credentials: { email },
-          error: 'Too many failed attempts. Account temporarily locked.'
-        });
+    // Create a map of users for easy lookup
+    const usersMap = users.reduce((map, user) => {
+      if (user.userID) {
+        map[user.userID.toString()] = user;
       }
+      return map;
+    }, {});
 
-      return res.render('login', {
-        credentials: { email },
-        error: 'Invalid email or password.'
-      });
-    }
+    console.log('Seats:', seats);
+    console.log('Users:', usersMap);
 
-    // Successful login: clear attempts
-    loginAttempts[email] = { count: 0, lockUntil: null };
-
-    req.session.userId = user._id.toString();
-    req.session.isTechnician = user.isTechnician;
-    req.session.user = user;
-
-    if (rememberMe) {
-      res.cookie('rememberMe', { email, password }, {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: true
-      });
-    } else {
-      res.clearCookie('rememberMe');
-    }
-
-    res.redirect('/menu');
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).render('login', {
-      credentials: { email },
-      error: 'Server error. Please try again later.'
+    res.render('technicianpage', {
+      user: req.session.user,
+      seats: seats,
+      users: usersMap // Pass usersMap to the template
     });
+  } catch (error) {
+    console.error('Error fetching reservations:', error);
+    res.status(500).send('Server error');
   }
 });
 
+app.get('/register', function (req, res) {
+  res.render('register');
+});
 
-  app.get('/technicianpage', isAuthenticated, async (req, res) => {
-    try {
-      const seats = await Seat.find({ isAvailable: false }).exec();
-      const users = await User.find({}).exec(); // Fetch all users
+app.post('/register', async (req, res) => {
+  try {
+    const {
+      email,
+      password,
+      confirmPassword,
+      securityQuestion,
+      securityAnswer,
+      isTechnician
+    } = req.body;
 
-      // Create a map of users for easy lookup
-      const usersMap = users.reduce((map, user) => {
-        if (user.userID) {
-          map[user.userID.toString()] = user;
-        }
-        return map;
-      }, {});
-
-      console.log('Seats:', seats);
-      console.log('Users:', usersMap);
-
-      res.render('technicianpage', {
-        user: req.session.user,
-        seats: seats,
-        users: usersMap // Pass usersMap to the template
-      });
-    } catch (error) {
-      console.error('Error fetching reservations:', error);
-      res.status(500).send('Server error');
+    if (!email || !password || !confirmPassword || !securityQuestion || !securityAnswer) {
+      return res.send(`<script>alert('All fields are required.'); window.history.back();</script>`);
     }
-  });
 
-  app.get('/register', function (req, res) {
-    res.render('register');
-  });
+    if (!email.endsWith('@dlsu.edu.ph')) {
+      return res.send(`<script>alert('Email must end with @dlsu.edu.ph'); window.history.back();</script>`);
+    }
+
+    if (password !== confirmPassword) {
+      return res.send(`<script>alert('Passwords do not match.'); window.history.back();</script>`);
+    }
+
+    const existingUser = await User.findOne({ username: email });
+    if (existingUser) {
+      return res.send(`<script>alert('Unable to register with provided information.'); window.history.back();</script>`);
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // ✅ Extract name from email
+    const localPart = email.split('@')[0]; 
+    const name = localPart
+      .split('_')
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' '); 
+
+    const newUser = new User({
+      username: email,
+      password: hashedPassword,
+      name: name,
+      securityQuestion,
+      securityAnswer,
+      isTechnician: isTechnician === 'true',
+      userID: Date.now()
+    });
+
+    await newUser.save();
+    console.log("New user saved:", newUser);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error registering new user:", error);
+    res.json({ success: false, message: 'Error registering new user.' });
+  }
+});
+
 
   app.post('/check-email', async function (req, res) {
     const { email } = req.body;
