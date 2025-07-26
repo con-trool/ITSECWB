@@ -345,6 +345,49 @@
             transform: translateY(-20px);
         }
         }
+          .rule-item {
+      list-style: none;
+      position: relative;
+      padding-left: 1.75em;
+      font-size: 0.9em;
+      color: #555;
+      text-align: left;
+      line-height: 1.4;
+    }
+
+    .rule-item::before {
+      content: "❌";
+      position: absolute;
+      left: 0;
+      top: 0.05em;
+      color: red;
+    }
+
+    .rule-item.valid {
+      color: #006937;
+    }
+
+    .rule-item.valid::before {
+      content: "✅";
+      color: #006937;
+    }
+
+    .error {
+      color: red;
+      font-size: 0.9em;
+      margin-top: 0.25em;
+      display: none;
+    }
+
+    .close-btn {
+      position: absolute;
+      right: 20px;
+      top: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      color: red;
+      cursor: pointer;
+    }
     </style>
 </head>
 <body style="background: url('html/GeneralIMG/StandardBG.png') center/cover no-repeat fixed;">
@@ -370,6 +413,7 @@
     <div class="button-section">
         <div class="button-container" style="width: 280px;">
             <button onclick="openBookDialog()">Book Seat</button>
+            <button onclick="document.getElementById('changePasswordDialog').showModal()">Change Password</button>
             <button onclick="window.location.href='deleteprofile'">Delete Account</button>
         </div>
     </div>
@@ -524,8 +568,84 @@
             <button id="confirmNo">Cancel</button>
         </div>
     </dialog>
+<dialog id="changePasswordDialog">
+    <span class="close-btn" onclick="changePasswordDialog.close()">×</span>
+    <h3>Change Password</h3>
+    <p>Current Password:</p>
+    <input type="password" id="currentPass" placeholder="Current Password" />
+    <div id="currentPassError" class="error">Incorrect current password.</div>
 
+    <p>New Password:</p>
+    <input type="password" id="newPass" placeholder="New Password" />
+    <ul id="pass-rules">
+      <li id="pass-rule-length" class="rule-item">At least 8 characters</li>
+      <li id="pass-rule-uppercase" class="rule-item">At least one uppercase letter</li>
+      <li id="pass-rule-lowercase" class="rule-item">At least one lowercase letter</li>
+      <li id="pass-rule-number" class="rule-item">At least one number (0–9)</li>
+      <li id="pass-rule-special" class="rule-item">At least one special character (!@#$%^&*)</li>
+    </ul>
+
+    <input type="password" id="confirmNewPass" placeholder="Confirm New Password" />
+    <div id="passMatchError" class="error">Passwords do not match.</div>
+
+    <button id="updatePasswordBtn" disabled>Update</button>
+  </dialog>
     <script>
+         document.addEventListener("DOMContentLoaded", () => {
+  const currentPass = document.getElementById("currentPass");
+  const newPass = document.getElementById("newPass");
+  const confirmNewPass = document.getElementById("confirmNewPass");
+  const updateBtn = document.getElementById("updatePasswordBtn");
+
+  function checkPasswordValid(pass) {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/.test(pass);
+  }
+
+  function updatePassRules(pass) {
+    document.getElementById("pass-rule-length").classList.toggle("valid", pass.length >= 8);
+    document.getElementById("pass-rule-uppercase").classList.toggle("valid", /[A-Z]/.test(pass));
+    document.getElementById("pass-rule-lowercase").classList.toggle("valid", /[a-z]/.test(pass));
+    document.getElementById("pass-rule-number").classList.toggle("valid", /\d/.test(pass));
+    document.getElementById("pass-rule-special").classList.toggle("valid", /[!@#$%^&*]/.test(pass));
+  }
+
+  function validateAllInputs() {
+    const pass = newPass.value.trim();
+    const confirm = confirmNewPass.value.trim();
+    const current = currentPass.value.trim();
+
+    const valid = checkPasswordValid(pass);
+    const match = pass === confirm;
+
+    updatePassRules(pass);
+    document.getElementById("passMatchError").style.display = !match && confirm.length > 0 ? "block" : "none";
+
+    updateBtn.disabled = !(valid && match && current.length > 0);
+  }
+
+  [currentPass, newPass, confirmNewPass].forEach(input => {
+    input.addEventListener("input", validateAllInputs);
+  });
+
+  updateBtn.addEventListener("click", async () => {
+    const res = await fetch("/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        currentPassword: currentPass.value,
+        newPassword: newPass.value
+      })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert("Password updated successfully!");
+      changePasswordDialog.close();
+    } else {
+      document.getElementById("currentPassError").style.display = "block";
+    }
+  });
+});
         document.addEventListener('DOMContentLoaded', function() {
             const userType = localStorage.getItem('userType');
             const homeLink = document.getElementById('home-link');
