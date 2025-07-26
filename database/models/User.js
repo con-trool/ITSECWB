@@ -2,8 +2,16 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
   userID: Number,
-  username: String,
-  password: String,
+  username: {
+    type: String,
+    required: true,
+    maxlength: 100
+  },
+  password: {
+    type: String,
+    required: true,
+    maxlength: 64
+  },
   name: String,
   college: String,
   program: String,
@@ -11,9 +19,11 @@ const userSchema = new mongoose.Schema({
   image: String,
   isTechnician: Boolean,
   securityQuestion: String,
-  securityAnswer: String,
-
-  // 🔐 Add these two fields:
+  securityAnswer: {
+    type: String,
+    required: true,
+    maxlength: 100
+  },
   failedLoginAttempts: {
     type: Number,
     default: 0
@@ -21,7 +31,27 @@ const userSchema = new mongoose.Schema({
   lockUntil: {
     type: Date,
     default: null
+  },
+  passwordHistory: {
+    type: [String],
+    default: []
+  },
+  lastPasswordChange: {
+    type: Date,
+    default: Date.now
+  },
+  lastLoginAttempt: {
+  type: Date,
+  default: null
+  },
+  lastLoginSuccess: {
+    type: Boolean,
+    default: null
   }
+
 });
+
+
+
 
 module.exports = mongoose.model('User', userSchema);

@@ -307,9 +307,58 @@
         #confirmDialog button:last-child {
             background: red;
         }
+
+        .login-alert {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #333;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        font-size: 0.95rem;
+        z-index: 9999;
+        opacity: 0;
+        transform: translateY(-20px);
+        animation: slideDownFade 0.5s forwards, autoFadeOut 0.5s 4s forwards;
+        }
+
+        .login-alert.success {
+        background-color: #007e46;
+        }
+
+        .login-alert.error {
+        background-color: #b30000;
+        }
+
+        @keyframes slideDownFade {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        }
+
+        @keyframes autoFadeOut {
+        to {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        }
     </style>
 </head>
 <body style="background: url('html/GeneralIMG/StandardBG.png') center/cover no-repeat fixed;">
+
+{{#if lastLoginInfo.date}}
+  <div id="login-alert" class="login-alert {{#if lastLoginInfo.success}}success{{else}}error{{/if}}">
+    {{#if lastLoginInfo.success}}
+      Last account access: {{lastLoginInfo.date}} (Successful)
+    {{else}}
+      Most recent login attempt: {{lastLoginInfo.date}} (Unsuccessful)
+    {{/if}}
+  </div>
+{{/if}}
+
     <div class="logo">
         <img src="html/IndexIMG/Logo.png" alt="LabSpot Logo">
     </div>

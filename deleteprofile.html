@@ -1,6 +1,8 @@
 <html>
 <head>
     <title>LabSpot</title>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
     <style>
         :root {
             --logo-width: 170px;
@@ -169,6 +171,61 @@
             height: auto;
         }
 
+        dialog {
+        padding: 2em;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        font-family: "Poppins", sans-serif;
+        text-align: center;
+        max-width: 300px;
+        }
+
+        dialog::backdrop {
+        background: rgba(0, 0, 0, 0.4);
+        }
+
+        .bdialog {
+        margin-top: 1em;
+        padding: 0.5em 1.2em;
+        border: none;
+        border-radius: 20px;
+        background-color: #006937;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        }
+
+        .password-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        }
+
+        .password-container input {
+        width: 100%;
+        padding-right: 2.5em;
+        }
+
+        .toggle-password {
+        position: absolute;
+        right: 1.5em;
+        top: 40%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #666;
+        font-size: 1.2em;
+        pointer-events: auto;
+        }
+
+        .error-message {
+        color: red;
+        font-size: 0.9em;
+        margin-top: 4px;
+        display: none;
+        }
+
+
     </style>
 </head>
 <body style="background: url('html/GeneralIMG/StandardBG.png') center/cover no-repeat fixed;">
@@ -196,8 +253,11 @@
                 <input type="text" id="email" name="email" required>
 
                 <label for="password">Password:</label>
+                <div class="password-container">
                 <input type="password" id="password" name="password" required>
-                
+                <ion-icon class="toggle-password" name="eye-off-outline" onclick="togglePassword('password', this)"></ion-icon>
+                </div>
+
                 <input type="submit" value="Delete Account">
                 <p class="error-message" id="error-message">Invalid email or password.</p>
             </form>
@@ -239,9 +299,15 @@
                     const result = await response.json();
 
                     if (result.success) {
-                        alert('Account deleted successfully.');
-                        window.location.href = 'index.html'; // Redirect to index page
-                    } else {
+                        const successDialog = document.getElementById('success-dialog');
+                        successDialog.showModal();
+
+                        successDialog.querySelector('.bdialog').addEventListener('click', () => {
+                            successDialog.close();
+                            window.location.href = 'index.html'; // Redirect after closing
+                        });
+                    }
+                    else {
                         errorMessage.textContent = result.message;
                         errorMessage.style.display = 'block'; // Show error message
                     }
@@ -251,6 +317,28 @@
                 }
             });
         });
+
+
+    function togglePassword(id, icon) {
+      const input = document.getElementById(id);
+      if (input.type === "password") {
+        input.type = "text";
+        icon.name = "eye-outline";
+      } else {
+        input.type = "password";
+        icon.name = "eye-off-outline";
+      }
+    }
+
+
     </script>
+    
+    <dialog id="success-dialog">
+    <h2>Account Deleted Successfully</h2>
+    <button class="bdialog">Close</button>
+    </dialog>
+
+    
+
 </body>
 </html>
