@@ -100,7 +100,10 @@
       z-index: 2;
       backdrop-filter: blur(20px);
     }
-
+.profile-details {
+  text-align: left;
+  color: white;
+}
     dialog .x {
       filter: grayscale(1);
       border: none;
@@ -308,14 +311,14 @@
         guestDialog.showModal();
       }
     }
-    function checkGuest() {
-      if (isUserLoggedIn()) {
-        location.href = 'userprofile';
-      } else {
-        const guestDialog = document.getElementById('guest');
-        guestDialog.showModal();
+      function checkGuest() {
+        if (isUserLoggedIn()) {
+          location.href = 'userprofile';
+        } else {
+          const guestDialog = document.getElementById('guest');
+          guestDialog.showModal();
+        }
       }
-    }
 
     function goToPage(page) {
       const isGuest = {{isGuest}};

@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
   description: String,
   image: String,
   isTechnician: Boolean,
+  isAdmin: Boolean,
   securityQuestion: String,
   securityAnswer: {
     type: String,

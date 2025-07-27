@@ -3,8 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>LabSpot - User Profile</title>
-  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap">
   <style>
@@ -95,16 +93,18 @@
     }
 
     .container {
-      max-width: 1000px;
+      max-width: 10000px;
       margin-top: 150px;
       padding: 20px;
+        text-align: left;
+  color: white;
     }
 
     .profile-section {
       margin-top: 50px;
       display: flex;
       justify-content: center;
-      opacity: 0;
+      opacity: 1;
       transition: opacity 0.5s ease-in-out;
     }
 
@@ -204,58 +204,6 @@
       color: red;
       cursor: pointer;
     }
-
-    .password-wrapper {
-      position: relative;
-    }
-
-    .password-wrapper input[type="password"],
-    .password-wrapper input[type="text"] {
-      width: 100%;
-      padding-right: 40px;
-    }
-
-    .password-toggle {
-      position: absolute;
-      top: 50%;
-      right: 10px;
-      transform: translateY(-50%);
-      font-size: 22px;
-      color: #aaa;
-      cursor: pointer;
-    }
-
-    .password-wrapper input[type="password"],
-    .password-wrapper input[type="text"] {
-      width: 100%;
-      padding: 12px 40px 12px 12px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-sizing: border-box;
-      background-color: #fff;
-      color: #000;
-    }
-
-    #updatePasswordBtn {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #006937;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    #updatePasswordBtn:hover {
-      background-color: #008c4f;
-    }
-
-
-
-
   </style>
 </head>
 <body>
@@ -264,7 +212,7 @@
     <img src="/html/IndexIMG/Logo.png" alt="LabSpot Logo">
   </div>
 
-  <div class="home-link" id="home-link">Home</div>
+  <a href="#" class="home-link" id="home-link">Home</a>
   <div class="user-profile-bar">{{#if user.isTechnician}}Technician Profile{{else}}User Profile{{/if}}</div>
 
   <div class="button-section">
@@ -295,20 +243,12 @@
   <dialog id="changePasswordDialog">
     <span class="close-btn" onclick="changePasswordDialog.close()">×</span>
     <h3>Change Password</h3>
-    
     <p>Current Password:</p>
-    <div class="password-wrapper">
-      <input type="password" id="currentPass" placeholder="Current Password" />
-      <ion-icon name="eye-outline" class="password-toggle" onclick="togglePassword(this, 'currentPass')"></ion-icon>
-    </div>
-    <div id="currentPassError" class="error">Incorrect password.</div>
+    <input type="password" id="currentPass" placeholder="Current Password" />
+    <div id="currentPassError" class="error">Incorrect current password.</div>
 
     <p>New Password:</p>
-    <div class="password-wrapper">
-      <input type="password" id="newPass" placeholder="New Password" />
-      <ion-icon name="eye-outline" class="password-toggle" onclick="togglePassword(this, 'newPass')"></ion-icon>
-    </div>
-
+    <input type="password" id="newPass" placeholder="New Password" />
     <ul id="pass-rules">
       <li id="pass-rule-length" class="rule-item">At least 8 characters</li>
       <li id="pass-rule-uppercase" class="rule-item">At least one uppercase letter</li>
@@ -317,97 +257,14 @@
       <li id="pass-rule-special" class="rule-item">At least one special character (!@#$%^&*)</li>
     </ul>
 
-    <p>Confirm New Password:</p>
-    <div class="password-wrapper">
-      <input type="password" id="confirmNewPass" placeholder="Confirm New Password" />
-      <ion-icon name="eye-outline" class="password-toggle" onclick="togglePassword(this, 'confirmNewPass')"></ion-icon>
-    </div>
+    <input type="password" id="confirmNewPass" placeholder="Confirm New Password" />
     <div id="passMatchError" class="error">Passwords do not match.</div>
 
     <button id="updatePasswordBtn" disabled>Update</button>
-
   </dialog>
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const currentPass = document.getElementById("currentPass");
-    const newPass = document.getElementById("newPass");
-    const confirmNewPass = document.getElementById("confirmNewPass");
-    const updateBtn = document.getElementById("updatePasswordBtn");
-    const passMatchError = document.getElementById("passMatchError");
-
-    let confirmTouched = false; // ✅ Track if user has finished typing
-
-    function checkPasswordValid(pass) {
-      return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/.test(pass);
-    }
-
-    function updatePassRules(pass) {
-      document.getElementById("pass-rule-length").classList.toggle("valid", pass.length >= 8);
-      document.getElementById("pass-rule-uppercase").classList.toggle("valid", /[A-Z]/.test(pass));
-      document.getElementById("pass-rule-lowercase").classList.toggle("valid", /[a-z]/.test(pass));
-      document.getElementById("pass-rule-number").classList.toggle("valid", /\d/.test(pass));
-      document.getElementById("pass-rule-special").classList.toggle("valid", /[!@#$%^&*]/.test(pass));
-    }
-
-    function validateAllInputs() {
-      const pass = newPass.value.trim();
-      const confirm = confirmNewPass.value.trim();
-      const current = currentPass.value.trim();
-
-      const valid = checkPasswordValid(pass);
-      const match = pass === confirm;
-
-      updatePassRules(pass);
-
-      // ✅ Show error only if confirm field was blurred (user finished typing)
-      passMatchError.style.display = (!match && confirmTouched) ? "block" : "none";
-
-      updateBtn.disabled = !(valid && match && current.length > 0);
-    }
-
-    // 🎯 Attach listeners
-    newPass.addEventListener("input", validateAllInputs);
-    currentPass.addEventListener("input", validateAllInputs);
-    confirmNewPass.addEventListener("input", validateAllInputs);
-
-    confirmNewPass.addEventListener("blur", () => {
-      confirmTouched = true;
-      validateAllInputs();
-    });
-
-    updateBtn.addEventListener("click", async () => {
-      const res = await fetch("/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          currentPassword: currentPass.value,
-          newPassword: newPass.value
-        })
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        alert("Password updated successfully!");
-        changePasswordDialog.close();
-      } else {
-        document.getElementById("currentPassError").style.display = "block";
-      }
-    });
-  });
-
-    function togglePassword(icon, inputId) {
-      const input = document.getElementById(inputId);
-      const isHidden = input.type === "password";
-      input.type = isHidden ? "text" : "password";
-      icon.name = isHidden ? "eye-off-outline" : "eye-outline";
-    }
-
-
-</script>
-
-<<<<<<< HEAD
- document.addEventListener('DOMContentLoaded', function() {
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
         const userType = localStorage.getItem('userType');
         const homeLink = document.getElementById('home-link');
 
@@ -417,8 +274,63 @@
             homeLink.href = '/menu';
         }
     });
+    document.addEventListener("DOMContentLoaded", () => {
+  const currentPass = document.getElementById("currentPass");
+  const newPass = document.getElementById("newPass");
+  const confirmNewPass = document.getElementById("confirmNewPass");
+  const updateBtn = document.getElementById("updatePasswordBtn");
+
+  function checkPasswordValid(pass) {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/.test(pass);
+  }
+
+  function updatePassRules(pass) {
+    document.getElementById("pass-rule-length").classList.toggle("valid", pass.length >= 8);
+    document.getElementById("pass-rule-uppercase").classList.toggle("valid", /[A-Z]/.test(pass));
+    document.getElementById("pass-rule-lowercase").classList.toggle("valid", /[a-z]/.test(pass));
+    document.getElementById("pass-rule-number").classList.toggle("valid", /\d/.test(pass));
+    document.getElementById("pass-rule-special").classList.toggle("valid", /[!@#$%^&*]/.test(pass));
+  }
+
+  function validateAllInputs() {
+    const pass = newPass.value.trim();
+    const confirm = confirmNewPass.value.trim();
+    const current = currentPass.value.trim();
+
+    const valid = checkPasswordValid(pass);
+    const match = pass === confirm;
+
+    updatePassRules(pass);
+    document.getElementById("passMatchError").style.display = !match && confirm.length > 0 ? "block" : "none";
+
+    updateBtn.disabled = !(valid && match && current.length > 0);
+  }
+
+  [currentPass, newPass, confirmNewPass].forEach(input => {
+    input.addEventListener("input", validateAllInputs);
+  });
+
+  updateBtn.addEventListener("click", async () => {
+    const res = await fetch("/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        currentPassword: currentPass.value,
+        newPassword: newPass.value
+      })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert("Password updated successfully!");
+      changePasswordDialog.close();
+    } else {
+      document.getElementById("currentPassError").style.display = "block";
+    }
+  });
+});
+
+ 
   </script>
-=======
->>>>>>> 19d3705baab279d8f95349207b624b993ea2a927
 </body>
 </html>

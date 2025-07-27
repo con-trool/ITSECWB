@@ -11,6 +11,7 @@ const Seat = require('./database/models/Seat');
 const path = require('path');
 const bodyParser = require('body-parser');
 const hbs = require('hbs');
+const {isTechnician, isAdmin } = require('./auth');
 
 hbs.registerHelper('lookup', function (obj, field, attr) {
   return (obj && obj[field]) ? obj[field][attr] : '';
@@ -63,6 +64,8 @@ app.use(session({
   store: MongoStore.create({ mongoUrl: uri }),
   cookie: { maxAge: 1000 * 60 * 60 * 24 } // 1 day
 }));
+
+
 
 // Middleware to check if the user is authenticated
 async function isAuthenticated(req, res, next) {
@@ -258,7 +261,20 @@ app.post('/login', async (req, res) => {
     // Successful login
     req.session.userId = user._id.toString();
     req.session.isTechnician = user.isTechnician;
+    req.session.isAdmin = user.isAdmin;
 
+    req.session.user = {
+      _id: user._id,
+      name: user.name,
+      username: user.username,
+      isTechnician: user.isTechnician,
+      isAdmin: user.isAdmin,
+      userID: user.userID,
+      image: user.image,
+      college: user.college,
+      program: user.program,
+      description: user.description
+    };
     // Optional: store login info in session to display after redirect
     req.session.lastLoginAttempt = {
       date: user.lastLoginAttempt,
@@ -276,7 +292,13 @@ app.post('/login', async (req, res) => {
     }
 
     // Redirect based on user type
-    return user.isTechnician ? res.redirect('/technicianpage') : res.redirect('/menu');
+      if (user.isAdmin) {
+        return res.redirect('/admin');
+      } else if (user.isTechnician) {
+        return res.redirect('/technicianpage');
+      } else {
+        return res.redirect('/menu');
+}
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).send('Server error');
@@ -285,7 +307,7 @@ app.post('/login', async (req, res) => {
 
 
 
-app.get('/technicianpage', isAuthenticated, async (req, res) => {
+app.get('/technicianpage', isAuthenticated, isTechnician, async (req, res) => {
   try {
     // Fetch the currently logged-in user
     const currentUser = await User.findById(req.session.userId).exec();
@@ -324,6 +346,62 @@ app.get('/technicianpage', isAuthenticated, async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+app.get('/admin', isAuthenticated, isAdmin, async (req, res) =>{
+  try {
+    // Fetch the currently logged-in user
+    const currentUser = await User.findById(req.session.userId).exec();
+
+    // Fetch seat reservations
+    const seats = await Seat.find({ isAvailable: false }).exec();
+
+    // Fetch all users
+    const users = await User.find({}).exec();
+
+    // Map users by their userID for quick access in the template
+    const usersMap = users.reduce((map, user) => {
+      if (user.userID) {
+        map[user.userID.toString()] = user;
+      }
+      return map;
+    }, {});
+
+    console.log('Seats:', seats);
+    console.log('Users:', usersMap);
+
+    res.render('admin', {
+    user: req.session.user,
+    seats: seats,
+    users: usersMap,
+    lastLoginInfo: {
+      date: currentUser?.lastLoginAttempt 
+        ? currentUser.lastLoginAttempt.toLocaleString()  // 👈 format the date
+        : null,
+      success: currentUser?.lastLoginSuccess
+    }
+  });
+
+  } catch (error) {
+    console.error('Error fetching reservations:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/admin/users', isAuthenticated, isAdmin, async (req, res) =>{
+  try {
+    const users = await User.find();
+    res.render('admin_users', { users });
+  } catch (err) {
+    console.error('Error loading users:', err);
+    res.status(500).send("Error loading users dashboard.");
+  }
+});
+
+// Show logs (admin access)
+app.get('/admin/logs', isAuthenticated, isAdmin, (req, res) => {
+  res.render('admin_logs'); // placeholder for now
+});
+
 
 
 app.get('/register', function (req, res) {
@@ -500,8 +578,6 @@ app.post('/forgot/reset-password', async (req, res) => {
 });
 
 
-
-
 // Logout route
 app.get('/logout', (req, res) => {
   req.session.destroy((err) => {
@@ -515,6 +591,7 @@ app.get('/logout', (req, res) => {
 app.get('/userprofile', isAuthenticated, async (req, res) => {
   try {
     const user = await User.findById(req.session.userId);
+    console.log('User:', user);
     res.render('userprofile', { user });
   } catch (error) {
     console.error('Error fetching user data:', error);
@@ -971,6 +1048,9 @@ async function populateSeats() {
   console.log('Seats populated');
 }
 
+app.use((req, res) => {
+  res.status(404).render('error_404'); // You can also create error_404.hbs
+});
 // Uncomment the following line to run the function to populate seats
 // populateSeats();
 

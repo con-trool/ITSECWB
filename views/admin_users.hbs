@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Users Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background: url('/html/GeneralIMG/StandardBG.png') center/cover no-repeat fixed;
+      color: white;
+    }
+
+    .logo {
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .logo img {
+      width: 170px;
+    }
+
+    .logout-link {
+      position: absolute;
+      top: 70px;
+      right: 109px;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+      text-decoration: none;
+    }
+
+    .user-profile-bar {
+      position: absolute;
+      top: 130px;
+      left: 0;
+      width: 96.1%;
+      height: 60px;
+      background: #05321d;
+      display: flex;
+      align-items: center;
+      padding-left: 65px;
+      font-size: 30px;
+    }
+
+      .button-section {
+            position: absolute;
+            top: 210px;
+            left: 20px;
+            background: #478159;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            height: calc(100% - 300px);
+            width: 300px;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .button-container button {
+            background: rgba(0, 54, 0, 0.8);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .button-container button:hover {
+            background: rgba(115, 227, 107, 0.8);
+        }
+
+
+    .main-content {
+     position: absolute;
+            top: 210px;
+            right: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            height: calc(100% - 300px);
+            width: calc(100% - 500px);
+            overflow-x: auto;
+      background: rgba(0, 0, 0, 0.7);
+    
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      color: white;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #555;
+      text-align: left;
+    }
+
+    th {
+      background-color: #006937;
+    }
+
+    select {
+      padding: 5px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <img src="/html/IndexIMG/Logo.png" alt="LabSpot Logo">
+  </div>
+
+  <a href="/logout" class="logout-link">Logout</a>
+  <div class="user-profile-bar">Admin - Users Dashboard</div>
+
+  <div class="button-section">
+    <div class="button-container" style="width: 280px;">
+            <button onclick="window.location.href='/admin'">Book Seat</button>
+            <button onclick="document.getElementById('changePasswordDialog').showModal()">Change Password</button>
+            <button onclick="window.location.href='/admin/users'">Users Dashboard</button>
+            <button onclick="window.location.href='/admin/logs'">Activity Logs</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <h2>Filter Users by Type:</h2>
+    <select id="filter" onchange="filterUsers()">
+      <option value="all">All</option>
+      <option value="technician">Technicians</option>
+      <option value="student">Students</option>
+    </select>
+
+    <table style="margin-top: 20px;">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>User Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each users}}
+          <tr class="user-row" data-type="{{#if isTechnician}}technician{{else}}student{{/if}}">
+            <td>{{name}}</td>
+            <td>{{username}}</td>
+            <td>{{#if isTechnician}}Technician{{else}}Student{{/if}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    function filterUsers() {
+      const selected = document.getElementById('filter').value;
+      document.querySelectorAll('.user-row').forEach(row => {
+        row.style.display = selected === 'all' || row.dataset.type === selected ? '' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>

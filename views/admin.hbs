@@ -408,12 +408,14 @@
 
     <a href="logout" class="logout-link" id="logout-link"><i class="fa fa-sign-out"></i> Logout</a>
 
-    <div class="user-profile-bar">Technician Dashboard</div>
+    <div class="user-profile-bar">Admin Dashboard</div>
 
     <div class="button-section">
         <div class="button-container" style="width: 280px;">
             <button onclick="openBookDialog()">Book Seat</button>
             <button onclick="document.getElementById('changePasswordDialog').showModal()">Change Password</button>
+            <button onclick="window.location.href='/admin/users'">Users Dashboard</button>
+            <button onclick="window.location.href='/admin/logs'">Activity Logs</button>
         </div>
     </div>
     
