@@ -123,8 +123,12 @@ app.get('/menu', allowGuest, async (req, res) => {
       lastLoginInfo // ✅ pass it to template
     });
   } catch (error) {
-    console.error('Error fetching user data:', error);
-    res.status(500).send('Server error');
+    console.error('Error fetching user data:', { //for 2.3.1
+      message: error.message,
+      stack: error.stack
+    });
+
+    next(error);
   }
 });
 
@@ -146,8 +150,11 @@ app.get('/GOKSreserve', allowGuest, async (req, res) => {
     console.log('User ID:', user.userID);
     res.render('GOKSreserve', { user });
   } catch (error) {
-    console.error('Error fetching user data:', error);
-    res.status(500).send('Server error');
+    console.error('Error fetching user data:', { //for 2.3.1
+      message: error.message,
+      stack: error.stack
+    });
+    next(error);
   }
 });
 
@@ -186,7 +193,7 @@ app.get('/reservation', isAuthenticated, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching reservations:', error);
-    res.status(500).send('Server error');
+    next(error);
   }
 });
 
@@ -203,8 +210,11 @@ app.get('/profile/:id', isAuthenticated, async (req, res) => {
     }
     res.render('otherprofile', { user });
   } catch (error) {
-    console.error('Error fetching user data:', error);
-    res.status(500).send('Server error');
+    console.error('Error fetching user data:', { //for 2.3.1
+      message: error.message,
+      stack: error.stack
+    });
+    next(error);
   }
 });
 
@@ -279,7 +289,7 @@ app.post('/login', async (req, res) => {
     return user.isTechnician ? res.redirect('/technicianpage') : res.redirect('/menu');
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).send('Server error');
+    next(error);
   }
 });
 
@@ -321,7 +331,7 @@ app.get('/technicianpage', isAuthenticated, async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching reservations:', error);
-    res.status(500).send('Server error');
+    next(error);
   }
 });
 
@@ -332,6 +342,7 @@ app.get('/register', function (req, res) {
 
 app.post('/register', async (req, res) => {
   try {
+    //throw new Error("Forced test error"); // Injected test error for 2.4.1 checklist
     const {
       email,
       password,
@@ -383,6 +394,7 @@ app.post('/register', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("Error registering new user:", error);
+    //next(error); //Send to global error handler for 2.4.1 checklist
     res.json({ success: false, message: 'Error registering new user.' });
   }
 });
@@ -517,8 +529,11 @@ app.get('/userprofile', isAuthenticated, async (req, res) => {
     const user = await User.findById(req.session.userId);
     res.render('userprofile', { user });
   } catch (error) {
-    console.error('Error fetching user data:', error);
-    res.status(500).send('Server error');
+    console.error('Error fetching user data:', { //for 2.3.1
+      message: error.message,
+      stack: error.stack
+    });
+    next(error);
   }
 });
 
@@ -527,8 +542,11 @@ app.get('/edituserpage', isAuthenticated, async (req, res) => {
     const user = await User.findById(req.session.userId);
     res.render('edituserpage', { user });
   } catch (error) {
-    console.error('Error fetching user data:', error);
-    res.status(500).send('Server error');
+    console.error('Error fetching user data:', { //for 2.3.1
+      message: error.message,
+      stack: error.stack
+    });
+    next(error);
   }
 });
 
@@ -553,7 +571,7 @@ app.post('/update-user', isAuthenticated, async (req, res) => {
     res.redirect('/userprofile');
   } catch (error) {
     console.error('Error updating user data:', error);
-    res.status(500).send('Server error');
+    next(error);
   }
 });
 
@@ -574,8 +592,11 @@ app.get('/AGreserve', allowGuest, async (req, res) => {
     }
     res.render('AGreserve', { user });
   } catch (error) {
-    console.error('Error fetching user data:', error);
-    res.status(500).send('Server error');
+    console.error('Error fetching user data:', { //for 2.3.1
+      message: error.message,
+      stack: error.stack
+    });
+    next(error);
   }
 });
 
@@ -586,7 +607,7 @@ app.get('/api/seats', async (req, res) => {
     res.json(seats);
   } catch (error) {
     console.error('Error fetching seats:', error);
-    res.status(500).send('Server error');
+    next(error);
   }
 });
 
@@ -602,8 +623,11 @@ app.get('/api/user/:id', async (req, res) => {
     }
     res.json(user);
   } catch (error) {
-    console.error('Error fetching user data:', error);
-    res.status(500).send('Server error');
+    console.error('Error fetching user data:', { //for 2.3.1
+      message: error.message,
+      stack: error.stack
+    });
+    next(error);
   }
 });
 
@@ -667,8 +691,12 @@ app.get('/VELreserve', allowGuest, async (req, res) => {
     }
     res.render('VELreserve', { user });
   } catch (error) {
-    console.error('Error fetching user data:', error);
-    res.status(500).send('Server error');
+    console.error('Error fetching user data:', { //for 2.3.1
+      message: error.message,
+      stack: error.stack
+    });
+
+    next(error);
   }
 });
 
@@ -694,7 +722,7 @@ app.get('/api/users', async (req, res) => {
     res.json(users);
   } catch (error) {
     console.error('Error fetching users:', error);
-    res.status(500).send('Server error');
+    next(error);
   }
 });
 
@@ -735,7 +763,7 @@ app.get('/api/slots', async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('Error fetching slots:', error);
-    res.status(500).send('Server error');
+    next(error);
   }
 });
 
@@ -789,7 +817,7 @@ app.post('/api/cancel', isAuthenticated, async (req, res) => {
           res.json({ success: false, message: 'Seat not found or user not authorized to cancel this reservation' });
       }
   } catch (error) {
-      res.status(500).send('Server error');
+      next(error);
   }
 });
 
@@ -847,7 +875,7 @@ app.post('/api/editReservation', isAuthenticated, async (req, res) => {
       }
   } catch (error) {
       console.error('Server error:', error);
-      res.status(500).send('Server error');
+      next(error);
   }
 });
 
@@ -862,7 +890,7 @@ app.get('/api/searchUser', async (req, res) => {
       }
   } catch (error) {
       console.error('Error fetching user:', error);
-      res.status(500).send('Server error');
+      next(error);
   }
 });
 
@@ -893,7 +921,7 @@ app.post('/api/bookReservation', async (req, res) => {
       res.json({ success: true });
     } catch (error) {
       console.error('Server error:', error);
-      res.status(500).send('Server error');
+      next(error);
     }
   });
 
@@ -971,9 +999,57 @@ async function populateSeats() {
   console.log('Seats populated');
 }
 
+
 // Uncomment the following line to run the function to populate seats
 // populateSeats();
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
 });
+
+/* uncomment to test error 500 and run this in browser http://localhost:5000/test-error
+                      error 404 - http://localhost:5000/nonexistentroute*/
+
+app.get('/test-error', (req, res) => {
+  throw new Error("Forced server error test");
+});
+
+//custom error
+app.use((req, res, next) => {
+res.status(404);
+
+  // If it's an API call or JSON request
+  if (req.originalUrl.startsWith('/api') || req.headers.accept?.includes('application/json')) {
+    return res.json({ error: 'Not found' });
+  }
+
+  // Render 404 page
+  res.render('errors/404');
+});
+
+
+// Global error handler — must be the last middleware
+app.use((err, req, res, next) => {
+  // Use the status code from AppError or default to 500
+  const status = err.status || 500;
+
+  console.error("Unhandled error:", err);
+
+  res.status(status);
+
+  // API/JSON requests
+  if (req.originalUrl.startsWith('/api') || req.headers.accept?.includes('application/json')) {
+    return res.json({
+      message: err.message || 'Internal server error',
+    });
+  }
+
+  // Render appropriate custom error page
+  if (status === 404) {
+    return res.render('errors/404');
+  }
+
+  res.render('errors/500');
+});
+
+
