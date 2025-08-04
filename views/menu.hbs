@@ -337,6 +337,12 @@
     document.addEventListener('DOMContentLoaded', function() {
       document.querySelector('.profile-icon').onclick = checkGuest;
     });
+
+    window.onpageshow = function(event) {
+    if (event.persisted || (window.performance && performance.navigation.type === 2)) {
+      window.location.reload();
+    }
+  };
   </script>
   
 </body>

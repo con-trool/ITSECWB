@@ -97,6 +97,7 @@
     }
 
     table {
+      table-layout: fixed;
       width: 100%;
       border-collapse: collapse;
       color: white;
@@ -106,8 +107,19 @@
       padding: 10px;
       border-bottom: 1px solid #555;
       text-align: left;
+      overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  vertical-align: top;
     }
-
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #555;
+      text-align: left;
+      vertical-align: top;
+      word-break: break-word;
+      white-space: normal;
+}
     th {
       background-color: #006937;
     }
@@ -136,10 +148,62 @@
     </div>
   </div>
 
-  <div class="main-content">
-    <h2>Activity Logs</h2>
-    <p>This page is under construction.</p>
-    <p>You can implement logging of login history, reservations, password changes, etc.</p>
-  </div>
+ <div class="main-content">
+  <h2>Activity Logs</h2>
+
+  <label for="filterAction">Filter by Action:</label>
+  <select id="filterAction" onchange="filterLogs()">
+    <option value="all">All</option>
+    <option value="register">Register</option>
+    <option value="login">Login</option>
+    <option value="logout">Logout</option>
+    <option value="reserve-seat">Reserve Seat</option>
+    <option value="cancel-reservation">Cancel Reservation</option>
+    <option value="promote-user">Promote User</option>
+    <option value="change-password">Change Password</option>
+    <!-- Add more as needed -->
+  </select>
+
+  <table style="margin-top: 20px;">
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>User ID</th>
+        <th>Role</th>
+        <th>Action</th>
+        <th>Details</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="logTableBody">
+      {{#each logs}}
+        <tr data-action="{{action}}">
+          <td>{{timestampFormatted}}</td>
+          <td>{{userID}}</td>
+          <td>{{role}}</td>
+          <td>{{action}}</td>       
+           <td>{{details}}</td>
+          <td>{{status}}</td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+  <script>
+  function filterLogs() {
+    const selected = document.getElementById('filterAction').value;
+    const rows = document.querySelectorAll('#logTableBody tr');
+
+    rows.forEach(row => {
+      const action = row.getAttribute('data-action');
+      row.style.display = (selected === 'all' || action === selected) ? '' : 'none';
+    });
+  }
+   window.onpageshow = function(event) {
+    if (event.persisted || (window.performance && performance.navigation.type === 2)) {
+      window.location.reload();
+    }
+  };
+</script>
 </body>
 </html>

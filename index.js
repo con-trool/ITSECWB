@@ -8,9 +8,11 @@ const fileUpload = require('express-fileupload');
 const User = require('./database/models/User');
 const schedule = require('node-schedule');
 const Seat = require('./database/models/Seat');
+const Log = require('./database/models/Log');
 const path = require('path');
 const bodyParser = require('body-parser');
 const hbs = require('hbs');
+const {isTechnician, isAdmin } = require('./auth');
 
 hbs.registerHelper('lookup', function (obj, field, attr) {
   return (obj && obj[field]) ? obj[field][attr] : '';
@@ -26,6 +28,9 @@ hbs.registerHelper('isGuestUser', function(userId, options) {
 });
 hbs.registerHelper('eq', function (a, b) {
   return a == b;
+});
+hbs.registerHelper('json', function (context) {
+  return JSON.stringify(context, null, 2);
 });
 const app = express();
 app.set('view engine', 'hbs');
@@ -97,6 +102,7 @@ const allowGuest = (req, res, next) => {
 };
 
 app.get('/menu', allowGuest, async (req, res) => {
+   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   try {
     let user;
     if (req.isGuest) {
@@ -235,14 +241,22 @@ app.get('/login', function (req, res) {
   res.render('login', { credentials });
 });
 
-app.post('/login', async (req, res) => {
+app.post('/login', async (req, res, next) => {
   const { email, password, rememberMe } = req.body;
 
   try {
     const user = await User.findOne({ username: email });
 
-    // If no user found, return error (do NOT store last attempt since user doesn't exist)
+    // If no user found, log and return error
     if (!user) {
+      await Log.create({
+        userID: 0,
+        role: 'student',
+        action: 'login',
+        details: `Login failed for unknown email: ${email}`,
+        status: 'failure'
+      });
+
       return res.render('login', {
         error: 'Invalid email or password.',
         credentials: { email, password }
@@ -252,24 +266,44 @@ app.post('/login', async (req, res) => {
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
 
-    // Log the attempt
+    // Update login attempt info
     user.lastLoginAttempt = new Date();
     user.lastLoginSuccess = isMatch;
     await user.save();
 
-    // Handle failed login
     if (!isMatch) {
+      await Log.create({
+        userID: user.userID,
+        role: user.isAdmin ? 'admin' : user.isTechnician ? 'technician' : 'student',
+        action: 'login',
+        details: `Incorrect password for ${email}`,
+        status: 'failure'
+      });
+
       return res.render('login', {
         error: 'Invalid email or password.',
         credentials: { email, password }
       });
     }
 
-    // Successful login
+    // ✅ Successful login
     req.session.userId = user._id.toString();
     req.session.isTechnician = user.isTechnician;
+    req.session.isAdmin = user.isAdmin;
 
-    // Optional: store login info in session to display after redirect
+    req.session.user = {
+      _id: user._id,
+      name: user.name,
+      username: user.username,
+      isTechnician: user.isTechnician,
+      isAdmin: user.isAdmin,
+      userID: user.userID,
+      image: user.image,
+      college: user.college,
+      program: user.program,
+      description: user.description
+    };
+
     req.session.lastLoginAttempt = {
       date: user.lastLoginAttempt,
       success: user.lastLoginSuccess
@@ -278,24 +312,45 @@ app.post('/login', async (req, res) => {
     // Handle rememberMe
     if (rememberMe) {
       res.cookie('rememberMe', { email, password }, {
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true
       });
     } else {
       res.clearCookie('rememberMe');
     }
 
-    // Redirect based on user type
-    return user.isTechnician ? res.redirect('/technicianpage') : res.redirect('/menu');
+    // Log success
+    await Log.create({
+      userID: user.userID,
+      role: user.isAdmin ? 'admin' : user.isTechnician ? 'technician' : 'student',
+      action: 'login',
+      details: `Successful login for ${email}`,
+      status: 'success'
+    });
+
+    // Redirect user
+    if (user.isAdmin) {
+      return res.redirect('/admin');
+    } else if (user.isTechnician) {
+      return res.redirect('/technicianpage');
+    } else {
+      return res.redirect('/menu');
+    }
   } catch (error) {
     console.error('Login error:', error);
+    await Log.create({
+      userID: 0,
+      role: 'student',
+      action: 'login',
+      details: `Unhandled error during login: ${error.message}`,
+      status: 'failure'
+    });
     next(error);
   }
 });
 
-
-
-app.get('/technicianpage', isAuthenticated, async (req, res) => {
+app.get('/technicianpage', isAuthenticated, isTechnician, async (req, res) => {
+   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   try {
     // Fetch the currently logged-in user
     const currentUser = await User.findById(req.session.userId).exec();
@@ -335,6 +390,98 @@ app.get('/technicianpage', isAuthenticated, async (req, res) => {
   }
 });
 
+app.get('/admin', isAuthenticated, isAdmin, async (req, res) =>{
+   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  try {
+    // Fetch the currently logged-in user
+    const currentUser = await User.findById(req.session.userId).exec();
+
+    // Fetch seat reservations
+    const seats = await Seat.find({ isAvailable: false }).exec();
+
+    // Fetch all users
+    const users = await User.find({}).exec();
+
+    // Map users by their userID for quick access in the template
+    const usersMap = users.reduce((map, user) => {
+      if (user.userID) {
+        map[user.userID.toString()] = user;
+      }
+      return map;
+    }, {});
+
+    console.log('Seats:', seats);
+    console.log('Users:', usersMap);
+
+    res.render('admin', {
+    user: req.session.user,
+    seats: seats,
+    users: usersMap,
+    lastLoginInfo: {
+      date: currentUser?.lastLoginAttempt 
+        ? currentUser.lastLoginAttempt.toLocaleString()  // 👈 format the date
+        : null,
+      success: currentUser?.lastLoginSuccess
+    }
+  });
+
+  } catch (error) {
+    console.error('Error fetching reservations:', error);
+    next(error);
+  }
+});
+
+app.get('/admin/users', isAuthenticated, isAdmin, async (req, res) =>{
+   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  try {
+    const users = await User.find();
+    res.render('admin_users', { users });
+  } catch (err) {
+    console.error('Error loading users:', err);
+    next(error);
+  }
+});
+
+// Show logs (admin access)
+app.get('/admin/logs', isAuthenticated, isAdmin, async (req, res) => {
+   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+   try {
+    const logs = await Log.find().sort({ timestamp: -1 }).lean();
+
+    logs.forEach(log => {
+      // Format timestamp to: "Mon Aug 04 2025 13:34:11"
+      const dateObj = new Date(log.timestamp);
+      log.timestampFormatted = dateObj.toDateString() + ' ' + dateObj.toTimeString().split(' ')[0];
+
+      // Optional: stringify details if object
+      if (typeof log.details === 'object') {
+        log.details = JSON.stringify(log.details);
+      }
+    });
+
+    res.render('admin_logs', { logs });
+  } catch (error) {
+    console.error("Error loading logs:", error);
+    res.status(500).send("Failed to load logs.");
+  }
+});
+
+app.post('/admin/promote', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const user = await User.findById(userId);
+
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    user.isAdmin = true;
+    await user.save();
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Promotion error:', error);
+    res.status(500).json({ success: false });
+  }
+});
 
 app.get('/register', function (req, res) {
   res.render('register');
@@ -342,7 +489,6 @@ app.get('/register', function (req, res) {
 
 app.post('/register', async (req, res) => {
   try {
-    //throw new Error("Forced test error"); // Injected test error for 2.4.1 checklist
     const {
       email,
       password,
@@ -353,48 +499,89 @@ app.post('/register', async (req, res) => {
     } = req.body;
 
     if (!email || !password || !confirmPassword || !securityQuestion || !securityAnswer) {
+      await Log.create({
+        userID: 0,
+        role: 'student',
+        action: 'register',
+        details: 'Missing required fields',
+        status: 'failure'
+      });
       return res.send(`<script>alert('All fields are required.'); window.history.back();</script>`);
     }
 
     if (!email.endsWith('@dlsu.edu.ph')) {
+      await Log.create({
+        userID: 0,
+        role: 'student',
+        action: 'register',
+        details: `Invalid email domain: ${email}`,
+        status: 'failure'
+      });
       return res.send(`<script>alert('Email must end with @dlsu.edu.ph'); window.history.back();</script>`);
     }
 
     if (password !== confirmPassword) {
+      await Log.create({
+        userID: 0,
+        role: 'student',
+        action: 'register',
+        details: `Password mismatch for email: ${email}`,
+        status: 'failure'
+      });
       return res.send(`<script>alert('Passwords do not match.'); window.history.back();</script>`);
     }
 
     const existingUser = await User.findOne({ username: email });
     if (existingUser) {
+      await Log.create({
+        userID: 0,
+        role: 'student',
+        action: 'register',
+        details: `Duplicate registration attempt for email: ${email}`,
+        status: 'failure'
+      });
       return res.send(`<script>alert('Unable to register with provided information.'); window.history.back();</script>`);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // ✅ Extract name from email
-    const localPart = email.split('@')[0]; 
+    const localPart = email.split('@')[0];
     const name = localPart
       .split('_')
       .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(' '); 
+      .join(' ');
 
+    const userID = Date.now();
     const newUser = new User({
       username: email,
       password: hashedPassword,
-      name: name,
+      name,
       securityQuestion,
       securityAnswer,
       isTechnician: isTechnician === 'true',
-      userID: Date.now()
+      userID
     });
 
     await newUser.save();
     console.log("New user saved:", newUser);
 
+    await Log.create({
+      userID,
+      role: isTechnician === 'true' ? 'technician' : 'student',
+      action: 'register',
+      details: `New user registered: ${email}`,
+      status: 'success'
+    });
+
     res.json({ success: true });
   } catch (error) {
     console.error("Error registering new user:", error);
-    //next(error); //Send to global error handler for 2.4.1 checklist
+    await Log.create({
+      userID: 0,
+      role: 'student',
+      action: 'register',
+      details: `Unhandled error: ${error.message}`,
+      status: 'failure'
+    });
     res.json({ success: false, message: 'Error registering new user.' });
   }
 });
@@ -511,15 +698,40 @@ app.post('/forgot/reset-password', async (req, res) => {
   }
 });
 
-
-
-
 // Logout route
-app.get('/logout', (req, res) => {
-  req.session.destroy((err) => {
+function getUserRole(session) {
+  if (session?.isAdmin) return 'admin';
+  if (session?.isTechnician) return 'technician';
+  return 'student';
+}
+
+app.get('/logout', async (req, res) => {
+  const userID = req.session.user?.userID || 0;
+  const role = getUserRole(req.session);
+
+  req.session.destroy(async (err) => {
     if (err) {
+      console.error("Error during logout:", err);
+
+      await Log.create({
+        userID,
+        role,
+        action: 'logout',
+        details: `Logout failed: ${err.message}`,
+        status: 'failure'
+      });
+
       return res.status(500).send('Logout failed');
     }
+
+    await Log.create({
+      userID,
+      role,
+      action: 'logout',
+      details: `User logged out successfully.`,
+      status: 'success'
+    });
+
     res.redirect('/login');
   });
 });

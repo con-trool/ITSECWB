@@ -143,35 +143,80 @@
       <option value="all">All</option>
       <option value="technician">Technicians</option>
       <option value="student">Students</option>
+       <option value="admin">Admins</option>
     </select>
 
     <table style="margin-top: 20px;">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>User Type</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each users}}
-          <tr class="user-row" data-type="{{#if isTechnician}}technician{{else}}student{{/if}}">
-            <td>{{name}}</td>
-            <td>{{username}}</td>
-            <td>{{#if isTechnician}}Technician{{else}}Student{{/if}}</td>
-          </tr>
-        {{/each}}
-      </tbody>
-    </table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>User Type</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each users}}
+      <tr class="user-row" data-type="{{#if isAdmin}}admin{{else}}{{#if isTechnician}}technician{{else}}student{{/if}}{{/if}}">
+        <td>{{name}}</td>
+        <td>{{username}}</td>
+        <td>
+          {{#if isAdmin}}Admin
+          {{else if isTechnician}}Technician
+          {{else}}Student
+          {{/if}}
+        </td>
+        <td>
+          {{#if isTechnician}}
+            {{#unless isAdmin}}
+              <button onclick="confirmPromotion('{{_id}}', '{{name}}')">Promote to Admin</button>
+            {{/unless}}
+          {{/if}}
+        </td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
   </div>
 
   <script>
-    function filterUsers() {
-      const selected = document.getElementById('filter').value;
-      document.querySelectorAll('.user-row').forEach(row => {
-        row.style.display = selected === 'all' || row.dataset.type === selected ? '' : 'none';
+   function filterUsers() {
+    const selected = document.getElementById('filter').value;
+    document.querySelectorAll('.user-row').forEach(row => {
+      const type = row.dataset.type;
+      row.style.display = selected === 'all' || type === selected ? '' : 'none';
+    });
+  }
+
+  function confirmPromotion(userId, userName) {
+    if (confirm(`Are you sure you want to promote ${userName} to Admin?`)) {
+      fetch('/admin/promote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert(`${userName} has been promoted to Admin.`);
+          location.reload(); // Reload the page to reflect the change
+        } else {
+          alert('Failed to promote user.');
+        }
+      })
+      .catch(err => {
+        console.error('Promotion error:', err);
+        alert('Server error. Try again later.');
       });
     }
+  }
+   window.onpageshow = function(event) {
+    if (event.persisted || (window.performance && performance.navigation.type === 2)) {
+      window.location.reload();
+    }
+  };
   </script>
 </body>
 </html>
