@@ -191,12 +191,22 @@
         </dialog>
 
         <script>
-          const errorText = `{{error}}`;
-          if (errorText.toLowerCase().includes('locked')) {
-            const dialog = document.getElementById('lockout-dialog');
-            if (dialog) dialog.showModal();
+        const errorText = `{{error}}`;
+        const alreadyShown = sessionStorage.getItem('lockoutShown');
+
+        if (errorText.toLowerCase().includes('locked') && !alreadyShown) {
+          const dialog = document.getElementById('lockout-dialog');
+          if (dialog) {
+            dialog.showModal();
+            sessionStorage.setItem('lockoutShown', 'true');
           }
-        </script>
+        }
+
+        // Reset the flag when dialog is closed
+        document.getElementById('lockout-dialog').addEventListener('close', () => {
+          sessionStorage.removeItem('lockoutShown');
+        });
+      </script>
       {{/if}}
 
       <div class="form-group form-check">

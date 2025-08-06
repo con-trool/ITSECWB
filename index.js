@@ -240,14 +240,13 @@ app.get('/login', function (req, res) {
 
   res.render('login', { credentials });
 });
-
 app.post('/login', async (req, res, next) => {
   const { email, password, rememberMe } = req.body;
 
   try {
     const user = await User.findOne({ username: email });
 
-    // If no user found, log and return error
+    // ✅ Check if user exists
     if (!user) {
       await Log.create({
         userID: 0,
@@ -263,15 +262,63 @@ app.post('/login', async (req, res, next) => {
       });
     }
 
-    // Check password
+    // ✅ Defensive fallback: prevent crash if fields are missing
+    if (typeof user.failedLoginAttempts !== 'number') {
+      user.failedLoginAttempts = 0;
+    }
+    if (!user.lockUntil) {
+      user.lockUntil = null;
+    }
+
+    // ✅ Check if account is currently locked
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      await Log.create({
+        userID: user.userID,
+        role: user.isAdmin ? 'admin' : user.isTechnician ? 'technician' : 'student',
+        action: 'login',
+        details: `Attempted login while locked out: ${email}`,
+        status: 'failure'
+      });
+
+      return res.render('login', {
+        error: 'Your account is temporarily locked. Please try again later.',
+        credentials: { email, password }
+      });
+    }
+
+    // ✅ Check password
     const isMatch = await bcrypt.compare(password, user.password);
 
-    // Update login attempt info
+    // ✅ Update login attempt info
     user.lastLoginAttempt = new Date();
     user.lastLoginSuccess = isMatch;
-    await user.save();
 
     if (!isMatch) {
+      // ❌ Incorrect password: increment failed attempts
+      user.failedLoginAttempts += 1;
+
+      if (user.failedLoginAttempts >= 5) {
+        const lockDuration = 15 * 60 * 1000; // 15 minutes
+        user.lockUntil = new Date(Date.now() + lockDuration);
+
+        await user.save();
+
+        await Log.create({
+          userID: user.userID,
+          role: user.isAdmin ? 'admin' : user.isTechnician ? 'technician' : 'student',
+          action: 'login',
+          details: `Account locked due to too many failed attempts.`,
+          status: 'failure'
+        });
+
+        return res.render('login', {
+          error: 'Account locked due to too many failed attempts. Please try again later.',
+          credentials: { email, password }
+        });
+      }
+
+      await user.save(); // Save increment
+
       await Log.create({
         userID: user.userID,
         role: user.isAdmin ? 'admin' : user.isTechnician ? 'technician' : 'student',
@@ -286,7 +333,12 @@ app.post('/login', async (req, res, next) => {
       });
     }
 
-    // ✅ Successful login
+    // ✅ Successful login: reset failed attempts
+    user.failedLoginAttempts = 0;
+    user.lockUntil = null;
+    await user.save();
+
+    // ✅ Set session
     req.session.userId = user._id.toString();
     req.session.isTechnician = user.isTechnician;
     req.session.isAdmin = user.isAdmin;
@@ -309,17 +361,17 @@ app.post('/login', async (req, res, next) => {
       success: user.lastLoginSuccess
     };
 
-    // Handle rememberMe
+    // ✅ Handle rememberMe
     if (rememberMe) {
       res.cookie('rememberMe', { email, password }, {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         httpOnly: true
       });
     } else {
       res.clearCookie('rememberMe');
     }
 
-    // Log success
+    // ✅ Log success
     await Log.create({
       userID: user.userID,
       role: user.isAdmin ? 'admin' : user.isTechnician ? 'technician' : 'student',
@@ -328,7 +380,7 @@ app.post('/login', async (req, res, next) => {
       status: 'success'
     });
 
-    // Redirect user
+    // ✅ Redirect based on role
     if (user.isAdmin) {
       return res.redirect('/admin');
     } else if (user.isTechnician) {
@@ -336,8 +388,10 @@ app.post('/login', async (req, res, next) => {
     } else {
       return res.redirect('/menu');
     }
+
   } catch (error) {
     console.error('Login error:', error);
+
     await Log.create({
       userID: 0,
       role: 'student',
@@ -345,9 +399,12 @@ app.post('/login', async (req, res, next) => {
       details: `Unhandled error during login: ${error.message}`,
       status: 'failure'
     });
-    next(error);
+
+    next(error); // this will trigger your global error handler
   }
 });
+
+
 
 app.get('/technicianpage', isAuthenticated, isTechnician, async (req, res) => {
    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
