@@ -240,6 +240,7 @@ app.get('/login', function (req, res) {
 
   res.render('login', { credentials });
 });
+
 app.post('/login', async (req, res, next) => {
   const { email, password, rememberMe } = req.body;
 
@@ -250,7 +251,7 @@ app.post('/login', async (req, res, next) => {
     if (!user) {
       await Log.create({
         userID: 0,
-        role: 'student',
+        role: 'unknown',
         action: 'login',
         details: `Login failed for unknown email: ${email}`,
         status: 'failure'
@@ -524,21 +525,58 @@ app.get('/admin/logs', isAuthenticated, isAdmin, async (req, res) => {
 });
 
 app.post('/admin/promote', isAuthenticated, isAdmin, async (req, res) => {
+  const { userId } = req.body;
+  const actingUser = req.session.user;
+
+  // Extract acting user's numeric ID and role
+  const actingUserID = actingUser?.userID || 0;
+  const actingRole = 'admin';
+
   try {
-    const { userId } = req.body;
-    const user = await User.findById(userId);
+    const userToPromote = await User.findById(userId);
 
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (!userToPromote) {
+      // Log failed attempt due to user not found
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'promote',
+        details: `Promotion failed - user not found (ID: ${userId})`,
+        status: 'failure'
+      });
 
-    user.isAdmin = true;
-    await user.save();
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    userToPromote.isAdmin = true;
+    await userToPromote.save();
+
+    // Log successful promotion
+    await Log.create({
+      userID: actingUserID,
+      role: actingRole,
+      action: 'promote',
+      details: `Promoted user with ID ${userToPromote.userID} to admin`,
+      status: 'success'
+    });
 
     res.json({ success: true });
   } catch (error) {
     console.error('Promotion error:', error);
+
+    // Log any unhandled server error
+    await Log.create({
+      userID: actingUserID,
+      role: actingRole,
+      action: 'promote',
+      details: `Unhandled error during promotion: ${error.message}`,
+      status: 'failure'
+    });
+
     res.status(500).json({ success: false });
   }
 });
+
 
 app.get('/register', function (req, res) {
   res.render('register');
@@ -712,13 +750,29 @@ app.post('/forgot/reset-password', async (req, res) => {
 
   try {
     const user = await User.findOne({ username: email });
-    if (!user) return res.json({ success: false });
+    if (!user) {
+      await Log.create({
+        userID: 0,
+        role: 'unknown',
+        action: 'change_password',
+        details: `Password reset failed - user not found for email: ${email}`,
+        status: 'failure'
+      });
+      return res.json({ success: false });
+    }
 
-    // Check if password was changed within the last 24 hours
     const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); //change to - 1 * 60 * 1000 for cquick check it's 1 minute
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours
 
     if (user.lastPasswordChange > oneDayAgo) {
+      await Log.create({
+        userID: user.userID,
+        role: user.isAdmin ? 'admin' : user.isTechnician ? 'technician' : 'student',
+        action: 'change_password',
+        details: `Password reset blocked - attempted before 24-hour cooldown.`,
+        status: 'failure'
+      });
+
       return res.json({
         success: false,
         message: "Password was recently changed. You can only change your password once every 24 hours."
@@ -729,6 +783,14 @@ app.post('/forgot/reset-password', async (req, res) => {
     for (const oldHashed of user.passwordHistory) {
       const isReused = await bcrypt.compare(newPassword, oldHashed);
       if (isReused) {
+        await Log.create({
+          userID: user.userID,
+          role: user.isAdmin ? 'admin' : user.isTechnician ? 'technician' : 'student',
+          action: 'change_password',
+          details: `Password reset blocked - reused password detected.`,
+          status: 'failure'
+        });
+
         return res.json({
           success: false,
           message: "This password has already been used. Please create a unique password."
@@ -736,24 +798,45 @@ app.post('/forgot/reset-password', async (req, res) => {
       }
     }
 
+    // Hash and save new password
     const hashed = await bcrypt.hash(newPassword, 10);
 
     user.password = hashed;
-    user.lastPasswordChange = now; // ⏰ Set timestamp of last password change
+    user.lastPasswordChange = now;
     user.passwordHistory.push(hashed);
 
-    // Keep only the last 5 password hashes
+    // Keep only last 5 passwords
     if (user.passwordHistory.length > 5) {
       user.passwordHistory = user.passwordHistory.slice(-5);
     }
 
     await user.save();
+
+    await Log.create({
+      userID: user.userID,
+      role: user.isAdmin ? 'admin' : user.isTechnician ? 'technician' : 'student',
+      action: 'change_password',
+      details: `Password reset successfully via forgot-password route.`,
+      status: 'success'
+    });
+
     res.json({ success: true });
+
   } catch (error) {
     console.error("Error resetting password:", error);
+
+    await Log.create({
+      userID: 0,
+      role: 'unknown',
+      action: 'change_password',
+      details: `Unhandled error during password reset: ${error.message}`,
+      status: 'failure'
+    });
+
     res.status(500).send("Internal server error");
   }
 });
+
 
 // Logout route
 function getUserRole(session) {
@@ -762,24 +845,17 @@ function getUserRole(session) {
   return 'student';
 }
 
+const util = require('util');
+
 app.get('/logout', async (req, res) => {
   const userID = req.session.user?.userID || 0;
   const role = getUserRole(req.session);
 
-  req.session.destroy(async (err) => {
-    if (err) {
-      console.error("Error during logout:", err);
+  const destroySession = util.promisify(req.session.destroy).bind(req.session);
 
-      await Log.create({
-        userID,
-        role,
-        action: 'logout',
-        details: `Logout failed: ${err.message}`,
-        status: 'failure'
-      });
-
-      return res.status(500).send('Logout failed');
-    }
+  try {
+    await destroySession();
+    res.clearCookie('connect.sid'); // Ensure session cookie is cleared
 
     await Log.create({
       userID,
@@ -790,7 +866,19 @@ app.get('/logout', async (req, res) => {
     });
 
     res.redirect('/login');
-  });
+  } catch (err) {
+    console.error("Error during logout:", err);
+
+    await Log.create({
+      userID,
+      role,
+      action: 'logout',
+      details: `Logout failed: ${err.message}`,
+      status: 'failure'
+    });
+
+    res.status(500).send('Logout failed');
+  }
 });
 
 app.get('/userprofile', isAuthenticated, async (req, res) => {
@@ -901,34 +989,87 @@ app.get('/api/user/:id', async (req, res) => {
 });
 
 app.post('/api/reserve', isAuthenticated, async (req, res) => {
-  const { date, timeslot, seatID, isAnonymous, userID } = req.body;
-  console.log('Reservation request received with the following details:');
-  console.log('Date:', date);
-  console.log('Time:', timeslot);
-  console.log('SeatID:', seatID);
-  console.log('IsAnonymous:', isAnonymous);
-  console.log('UserID:', userID);
+  const { date, timeslot, seatID, isAnonymous } = req.body;
+  const currentUser = req.session.user;
+
+  // Extract student info from session
+  const actingUserID = currentUser?.userID || 0;
+  const actingRole = 'student';
+
+  console.log('Student reservation request:', {
+    date, timeslot, seatID, isAnonymous, actingUserID
+  });
+
+  // Deny access if the user is an admin or technician
+  if (currentUser.isAdmin || currentUser.isTechnician) {
+    await Log.create({
+      userID: actingUserID,
+      role: actingRole,
+      action: 'booking',
+      details: `Unauthorized reservation attempt by ${currentUser.isAdmin ? 'admin' : 'technician'} (userID: ${actingUserID})`,
+      status: 'failure'
+    });
+
+    return res.status(403).json({ success: false, message: 'Only students can reserve seats via this route' });
+  }
 
   try {
     const seat = await Seat.findOne({ seatID, date, time: timeslot });
     console.log('Fetched seat from database:', seat);
+
     if (!seat) {
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'booking',
+        details: `Reservation failed - seat not found. seatID: ${seatID}, date: ${date}, time: ${timeslot}`,
+        status: 'failure'
+      });
+
       return res.status(404).json({ success: false, message: 'Seat not found' });
     }
 
     if (!seat.isAvailable) {
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'booking',
+        details: `Reservation failed - seat already reserved. seatID: ${seatID}, date: ${date}, time: ${timeslot}`,
+        status: 'failure'
+      });
+
       return res.status(400).json({ success: false, message: 'Seat is already reserved' });
     }
 
+    // Reserve seat
     seat.isAvailable = false;
-    seat.userID = userID;
+    seat.userID = actingUserID;
     seat.isAnonymous = isAnonymous;
 
     await seat.save();
     console.log('Seat reserved successfully:', seat);
+
+    await Log.create({
+      userID: actingUserID,
+      role: actingRole,
+      action: 'booking',
+      details: `Student reserved seatID: ${seatID} on ${date} at ${timeslot}`,
+      status: 'success'
+    });
+
     res.json({ success: true });
+
   } catch (error) {
     console.error('Error reserving seat:', error);
+
+    await Log.create({
+      userID: actingUserID,
+      role: actingRole,
+      action: 'booking',
+      details: `Unhandled error during reservation: ${error.message}`,
+      status: 'failure'
+    });
+
     res.status(500).send('Error reserving seat.');
   }
 });
@@ -1070,83 +1211,196 @@ app.post('/submit-form', async (req, res) => {
   }
 });
 
-app.post('/api/cancel', isAuthenticated, async (req, res) => {
+app.post('/api/cancel', isAuthenticated, async (req, res, next) => {
   const { date, timeslot, seatID, userID } = req.body;
+  const currentUser = req.session.user;
+
+  const actingUserID = currentUser?.userID || 0;
+  const actingRole = currentUser?.isAdmin
+    ? 'admin'
+    : currentUser?.isTechnician
+      ? 'technician'
+      : 'student';
+
+  console.log(`Cancel request by ${actingRole} (userID: ${actingUserID}) for reservation of userID: ${userID}`, {
+    seatID, date, timeslot
+  });
 
   try {
-      const query = { seatID, date, time: timeslot, userID: userID || null };
-      const seat = await Seat.findOne(query);
+    // Students can only cancel their own bookings
+    if (actingRole === 'student' && actingUserID !== userID) {
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'cancel_booking',
+        details: `Unauthorized cancel attempt by student on reservation of userID: ${userID}`,
+        status: 'failure'
+      });
+
+      return res.status(403).json({ success: false, message: 'Unauthorized to cancel this reservation' });
+    }
+
+    const query = { seatID, date, time: timeslot, userID: userID || null };
+    const seat = await Seat.findOne(query);
+
+    if (seat) {
+      seat.isAvailable = true;
+      seat.userID = null;
+      seat.isAnonymous = false;
+      await seat.save();
+
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'cancel_booking',
+        details: `${actingRole} canceled reservation for userID: ${userID}, seatID: ${seatID}, date: ${date}, time: ${timeslot}`,
+        status: 'success'
+      });
+
+      res.json({ success: true });
+
+    } else {
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'cancel_booking',
+        details: `Cancel failed - Seat not found or unauthorized. Target userID: ${userID}, seatID: ${seatID}, date: ${date}, time: ${timeslot}`,
+        status: 'failure'
+      });
+
+      res.json({ success: false, message: 'Seat not found or user not authorized to cancel this reservation' });
+    }
+
+  } catch (error) {
+    console.error('Cancel reservation error:', error);
+
+    await Log.create({
+      userID: actingUserID,
+      role: actingRole,
+      action: 'cancel_booking',
+      details: `Unhandled error during cancel_booking for userID: ${userID} - ${error.message}`,
+      status: 'failure'
+    });
+
+    next(error);
+  }
+});
+
+app.post('/api/editReservation', isAuthenticated, async (req, res, next) => {
+  const {
+    oldDate, oldTimeslot, oldSeatID,
+    newDate, newTimeslot, newSeatID,
+    userID, isAnonymous
+  } = req.body;
+
+  const currentUser = req.session.user; // logged-in user
+  const actingRole = currentUser.isAdmin
+    ? 'admin'
+    : currentUser.isTechnician
+      ? 'technician'
+      : 'student';
+
+  console.log(`Edit reservation request by ${actingRole} ${currentUser.userID} for student ${userID}`, {
+    oldDate, oldTimeslot, oldSeatID, newDate, newTimeslot, newSeatID, isAnonymous
+  });
+
+  try {
+    // Role check: only allow students to edit their own reservations
+    if (!currentUser.isTechnician && !currentUser.isAdmin && currentUser.userID !== userID) {
+      await Log.create({
+        userID: currentUser.userID,
+        role: actingRole,
+        action: 'edit_booking',
+        details: `Unauthorized attempt to edit another user's reservation (Target User: ${userID})`,
+        status: 'failure'
+      });
+
+      return res.status(403).json({ success: false, message: 'Unauthorized to edit this reservation' });
+    }
+
+    // CASE 1: Just updating anonymity flag
+    if (oldDate === newDate && oldTimeslot === newTimeslot && oldSeatID === newSeatID) {
+      const seat = await Seat.findOne({ seatID: oldSeatID, date: oldDate, time: oldTimeslot, userID });
       if (seat) {
-          seat.isAvailable = true;
-          seat.userID = null;
-          seat.isAnonymous = false;
-          await seat.save();
-          res.json({ success: true });
+        seat.isAnonymous = isAnonymous;
+        await seat.save();
+
+        await Log.create({
+          userID: currentUser.userID,
+          role: actingRole,
+          action: 'edit_booking',
+          details: `${actingRole} updated anonymity for reservation (User: ${userID}, SeatID: ${oldSeatID})`,
+          status: 'success'
+        });
+
+        return res.json({ success: true });
       } else {
-          res.json({ success: false, message: 'Seat not found or user not authorized to cancel this reservation' });
+        await Log.create({
+          userID: currentUser.userID,
+          role: actingRole,
+          action: 'edit_booking',
+          details: `Seat not found or unauthorized to update (User: ${userID}, SeatID: ${oldSeatID})`,
+          status: 'failure'
+        });
+
+        return res.status(404).json({ success: false, message: 'Seat not found or unauthorized' });
       }
+    }
+
+    // CASE 2: Changing to a different seat
+    const newSeat = await Seat.findOne({ seatID: newSeatID, date: newDate, time: newTimeslot });
+    if (!newSeat || !newSeat.isAvailable) {
+      await Log.create({
+        userID: currentUser.userID,
+        role: actingRole,
+        action: 'edit_booking',
+        details: `Failed seat change for user ${userID}. New seat invalid or already reserved.`,
+        status: 'failure'
+      });
+
+      return res.status(400).json({ success: false, message: 'New seat not available' });
+    }
+
+    // Reserve the new seat
+    newSeat.isAvailable = false;
+    newSeat.userID = userID;
+    newSeat.isAnonymous = isAnonymous;
+    await newSeat.save();
+
+    // Release old seat
+    const oldSeat = await Seat.findOne({ seatID: oldSeatID, date: oldDate, time: oldTimeslot, userID });
+    if (oldSeat) {
+      oldSeat.isAvailable = true;
+      oldSeat.userID = null;
+      oldSeat.isAnonymous = true;
+      await oldSeat.save();
+    }
+
+    await Log.create({
+      userID: currentUser.userID,
+      role: actingRole,
+      action: 'edit_booking',
+      details: `${actingRole} changed reservation for user ${userID} from ${oldSeatID} to ${newSeatID}`,
+      status: 'success'
+    });
+
+    return res.json({ success: true });
+
   } catch (error) {
-      next(error);
+    console.error('Edit reservation error:', error);
+
+    await Log.create({
+      userID: currentUser.userID || 0,
+      role: actingRole,
+      action: 'edit_booking',
+      details: `Unhandled error during edit_booking for user ${userID}: ${error.message}`,
+      status: 'failure'
+    });
+
+    next(error);
   }
 });
 
-app.post('/api/editReservation', isAuthenticated, async (req, res) => {
-  const { oldDate, oldTimeslot, oldSeatID, newDate, newTimeslot, newSeatID, userID, isAnonymous } = req.body;
-  console.log('Edit reservation request received with:', { oldDate, oldTimeslot, oldSeatID, newDate, newTimeslot, newSeatID, userID, isAnonymous });
-
-  try {
-      // Check if the new seat is the same as the old seat
-      if (oldDate === newDate && oldTimeslot === newTimeslot && oldSeatID === newSeatID) {
-          const seat = await Seat.findOne({ seatID: oldSeatID, date: oldDate, time: oldTimeslot, userID });
-          console.log('Same seat being updated:', seat);
-
-          if (seat) {
-              seat.isAnonymous = isAnonymous;
-              await seat.save();
-              console.log('Reservation updated successfully for the same seat:', seat);
-              return res.json({ success: true });
-          } else {
-              return res.status(404).json({ success: false, message: 'Seat not found or user not authorized to update this reservation' });
-          }
-      }
-
-      // Check availability and reserve the new seat
-      const newSeat = await Seat.findOne({ seatID: newSeatID, date: newDate, time: newTimeslot });
-      console.log('New seat fetched:', newSeat);
-
-      if (!newSeat) {
-          return res.status(404).json({ success: false, message: 'New seat not found' });
-      }
-
-      if (!newSeat.isAvailable) {
-          return res.status(400).json({ success: false, message: 'New seat is already reserved' });
-      }
-
-      newSeat.isAvailable = false;
-      newSeat.userID = userID;
-      newSeat.isAnonymous = isAnonymous;
-      await newSeat.save();
-      console.log('New seat reserved successfully:', newSeat);
-
-      // Cancel the old reservation
-      const oldSeat = await Seat.findOne({ seatID: oldSeatID, date: oldDate, time: oldTimeslot, userID });
-      console.log('Old seat fetched:', oldSeat);
-
-      if (oldSeat) {
-          oldSeat.isAvailable = true;
-          oldSeat.userID = null;
-          oldSeat.isAnonymous = true;
-          await oldSeat.save();
-          console.log('Old reservation cancelled successfully:', oldSeat);
-          res.json({ success: true });
-      } else {
-          res.json({ success: false, message: 'Old seat not found or user not authorized to cancel this reservation' });
-      }
-  } catch (error) {
-      console.error('Server error:', error);
-      next(error);
-  }
-});
 
 app.get('/api/searchUser', async (req, res) => {
   const { userID } = req.query;
@@ -1163,36 +1417,94 @@ app.get('/api/searchUser', async (req, res) => {
   }
 });
 
-app.post('/api/bookReservation', async (req, res) => {
-    const { userID, date, time, seatID, building, isAnonymous } = req.body;
-    console.log('Book seat request received with:', { userID, date, time, seatID, building, isAnonymous });
-  
-    try {
-      // Check if the seat exists
-      const seat = await Seat.findOne({ seatID, date, time });
-      console.log('Seat fetched:', seat);
-  
-      if (!seat) {
-        return res.status(404).json({ success: false, message: 'Seat not found' });
-      }
-  
-      if (!seat.isAvailable) {
-        return res.status(400).json({ success: false, message: 'Seat is already reserved' });
-      }
-  
-      // Book the seat
-      seat.isAvailable = false;
-      seat.userID = userID;
-      seat.isAnonymous = isAnonymous;
-      await seat.save();
-      console.log('Seat booked successfully:', seat);
-  
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Server error:', error);
-      next(error);
-    }
+app.post('/api/bookReservation', async (req, res, next) => {
+  const { userID, date, time, seatID, building, isAnonymous } = req.body;
+  const currentUser = req.session.user; // The logged-in user performing the action
+
+  const actingUserID = currentUser?.userID || 0;
+  const actingRole = currentUser?.isAdmin
+    ? 'admin'
+    : currentUser?.isTechnician
+      ? 'technician'
+      : 'student';
+
+  console.log(`Booking request by ${actingRole} (ID: ${actingUserID}) for student ${userID}`, {
+    date, time, seatID, building, isAnonymous
   });
+
+  try {
+    // Students can only book for themselves
+    if (actingRole === 'student' && userID !== actingUserID) {
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'booking',
+        details: `Unauthorized booking attempt by student for another user (Target: ${userID})`,
+        status: 'failure'
+      });
+
+      return res.status(403).json({ success: false, message: 'Unauthorized to book for another user' });
+    }
+
+    const seat = await Seat.findOne({ seatID, date, time });
+    console.log('Seat fetched:', seat);
+
+    if (!seat) {
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'booking',
+        details: `Booking failed - seat not found. seatID: ${seatID}, date: ${date}, time: ${time}, for user: ${userID}`,
+        status: 'failure'
+      });
+
+      return res.status(404).json({ success: false, message: 'Seat not found' });
+    }
+
+    if (!seat.isAvailable) {
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'booking',
+        details: `Booking failed - seat already reserved. seatID: ${seatID}, date: ${date}, time: ${time}, for user: ${userID}`,
+        status: 'failure'
+      });
+
+      return res.status(400).json({ success: false, message: 'Seat is already reserved' });
+    }
+
+    // Book the seat
+    seat.isAvailable = false;
+    seat.userID = userID;
+    seat.isAnonymous = isAnonymous;
+    await seat.save();
+    console.log('Seat booked successfully:', seat);
+
+    await Log.create({
+      userID: actingUserID,
+      role: actingRole,
+      action: 'booking',
+      details: `${actingRole} booked seatID: ${seatID} on ${date} at ${time} in ${building} for user: ${userID}`,
+      status: 'success'
+    });
+
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error('Booking error:', error);
+
+    await Log.create({
+      userID: actingUserID,
+      role: actingRole,
+      action: 'booking',
+      details: `Unhandled error during booking for user ${userID}: ${error.message}`,
+      status: 'failure'
+    });
+
+    next(error);
+  }
+});
+
 
 app.get('/otherprofile', function (req, res) {
   res.sendFile(__dirname + "/otherprofile.html");
@@ -1206,18 +1518,116 @@ app.post('/submit-student-data', function (req, res) {
   var name = req.body.firstName + " " + req.body.lastName;
   res.send(name + " obtained");
 });
+
 app.post("/change-password", async (req, res) => {
   const { currentPassword, newPassword } = req.body;
-  const user = await User.findById(req.session.userId); // or however you're tracking session
+  const user = await User.findById(req.session.userId);
 
-  const match = await bcrypt.compare(currentPassword, user.password);
-  if (!match) return res.json({ success: false });
+  const actingUserID = user.userID;
+  const actingRole = user.isAdmin
+    ? 'admin'
+    : user.isTechnician
+      ? 'technician'
+      : 'student';
 
-  const hashed = await bcrypt.hash(newPassword, 10);
-  user.password = hashed;
-  await user.save();
+  try {
+    const match = await bcrypt.compare(currentPassword, user.password);
 
-  res.json({ success: true });
+    if (!match) {
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'change_password',
+        details: 'Failed password change attempt - incorrect current password',
+        status: 'failure'
+      });
+
+      return res.json({ success: false, message: "Incorrect current password." });
+    }
+
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours
+
+    if (user.lastPasswordChange && user.lastPasswordChange > oneDayAgo) {
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'change_password',
+        details: 'Password change blocked - cooldown period not met (24h)',
+        status: 'failure'
+      });
+
+      return res.json({
+        success: false,
+        message: "You can only change your password once every 24 hours."
+      });
+    }
+
+    // Check for password reuse
+    if (user.passwordHistory && user.passwordHistory.length > 0) {
+      for (const oldHash of user.passwordHistory) {
+        const isReused = await bcrypt.compare(newPassword, oldHash);
+        if (isReused) {
+          await Log.create({
+            userID: actingUserID,
+            role: actingRole,
+            action: 'change_password',
+            details: 'Password change blocked - reused password detected',
+            status: 'failure'
+          });
+
+          return res.json({
+            success: false,
+            message: "This password has already been used. Please choose a unique password."
+          });
+        }
+      }
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    // Save new password
+    user.password = hashed;
+    user.lastPasswordChange = now;
+
+    // Initialize history if not existing
+    if (!user.passwordHistory) {
+      user.passwordHistory = [];
+    }
+
+    // Add new hash to history
+    user.passwordHistory.push(hashed);
+
+    // Keep only last 5 passwords
+    if (user.passwordHistory.length > 5) {
+      user.passwordHistory = user.passwordHistory.slice(-5);
+    }
+
+    await user.save();
+
+    await Log.create({
+      userID: actingUserID,
+      role: actingRole,
+      action: 'change_password',
+      details: 'Password changed successfully',
+      status: 'success'
+    });
+
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error('Change password error:', error);
+
+    await Log.create({
+      userID: actingUserID || 0,
+      role: actingRole || 'student',
+      action: 'change_password',
+      details: `Unhandled error during password change: ${error.message}`,
+      status: 'failure'
+    });
+
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
 });
 
 const buildings = {

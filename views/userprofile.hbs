@@ -220,7 +220,6 @@
       <button onclick="window.location.href='/edituserpage'">Edit Profile</button>
       <button onclick="window.location.href='/reservation'">Edit/See Reservations</button>
       <button onclick="document.getElementById('changePasswordDialog').showModal()">Change Password</button>
-      <button onclick="window.location.href='/deleteprofile'">Delete Account</button>
     </div>
   </div>
 
@@ -240,12 +239,12 @@
     </div>
   </div>
 
-  <dialog id="changePasswordDialog">
+<dialog id="changePasswordDialog">
     <span class="close-btn" onclick="changePasswordDialog.close()">×</span>
     <h3>Change Password</h3>
     <p>Current Password:</p>
     <input type="password" id="currentPass" placeholder="Current Password" />
-    <div id="currentPassError" class="error">Incorrect current password.</div>
+   
 
     <p>New Password:</p>
     <input type="password" id="newPass" placeholder="New Password" />
@@ -258,79 +257,95 @@
     </ul>
 
     <input type="password" id="confirmNewPass" placeholder="Confirm New Password" />
+     <div id="passwordChangeError" class="error" style="display: none;"></div>
     <div id="passMatchError" class="error">Passwords do not match.</div>
 
     <button id="updatePasswordBtn" disabled>Update</button>
   </dialog>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const userType = localStorage.getItem('userType');
-        const homeLink = document.getElementById('home-link');
-
-        if (userType === 'technician') {
-            homeLink.href = '/technicianmenu';
-        } else {
-            homeLink.href = '/menu';
-        }
-    });
     document.addEventListener("DOMContentLoaded", () => {
-  const currentPass = document.getElementById("currentPass");
-  const newPass = document.getElementById("newPass");
-  const confirmNewPass = document.getElementById("confirmNewPass");
-  const updateBtn = document.getElementById("updatePasswordBtn");
+    const currentPass = document.getElementById("currentPass");
+    const newPass = document.getElementById("newPass");
+    const confirmNewPass = document.getElementById("confirmNewPass");
+    const updateBtn = document.getElementById("updatePasswordBtn");
+    const errorDiv = document.getElementById("passwordChangeError");
 
-  function checkPasswordValid(pass) {
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/.test(pass);
-  }
+    function checkPasswordValid(pass) {
+      return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/.test(pass);
+    }
 
-  function updatePassRules(pass) {
-    document.getElementById("pass-rule-length").classList.toggle("valid", pass.length >= 8);
-    document.getElementById("pass-rule-uppercase").classList.toggle("valid", /[A-Z]/.test(pass));
-    document.getElementById("pass-rule-lowercase").classList.toggle("valid", /[a-z]/.test(pass));
-    document.getElementById("pass-rule-number").classList.toggle("valid", /\d/.test(pass));
-    document.getElementById("pass-rule-special").classList.toggle("valid", /[!@#$%^&*]/.test(pass));
-  }
+    function updatePassRules(pass) {
+      document.getElementById("pass-rule-length").classList.toggle("valid", pass.length >= 8);
+      document.getElementById("pass-rule-uppercase").classList.toggle("valid", /[A-Z]/.test(pass));
+      document.getElementById("pass-rule-lowercase").classList.toggle("valid", /[a-z]/.test(pass));
+      document.getElementById("pass-rule-number").classList.toggle("valid", /\d/.test(pass));
+      document.getElementById("pass-rule-special").classList.toggle("valid", /[!@#$%^&*]/.test(pass));
+    }
 
-  function validateAllInputs() {
-    const pass = newPass.value.trim();
-    const confirm = confirmNewPass.value.trim();
-    const current = currentPass.value.trim();
+    function validateAllInputs() {
+      const pass = newPass.value.trim();
+      const confirm = confirmNewPass.value.trim();
+      const current = currentPass.value.trim();
 
-    const valid = checkPasswordValid(pass);
-    const match = pass === confirm;
+      const valid = checkPasswordValid(pass);
+      const match = pass === confirm;
 
-    updatePassRules(pass);
-    document.getElementById("passMatchError").style.display = !match && confirm.length > 0 ? "block" : "none";
+      updatePassRules(pass);
+      document.getElementById("passMatchError").style.display = !match && confirm.length > 0 ? "block" : "none";
 
-    updateBtn.disabled = !(valid && match && current.length > 0);
-  }
+      updateBtn.disabled = !(valid && match && current.length > 0);
+    }
 
-  [currentPass, newPass, confirmNewPass].forEach(input => {
-    input.addEventListener("input", validateAllInputs);
-  });
-
-  updateBtn.addEventListener("click", async () => {
-    const res = await fetch("/change-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        currentPassword: currentPass.value,
-        newPassword: newPass.value
-      })
+    [currentPass, newPass, confirmNewPass].forEach(input => {
+      input.addEventListener("input", validateAllInputs);
     });
 
-    const data = await res.json();
-    if (data.success) {
-      alert("Password updated successfully!");
-      changePasswordDialog.close();
-    } else {
-      document.getElementById("currentPassError").style.display = "block";
-    }
-  });
-});
+    updateBtn.addEventListener("click", async () => {
+      errorDiv.style.display = "none"; // Hide old error
 
- 
+      const res = await fetch("/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: currentPass.value,
+          newPassword: newPass.value
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert("Password updated successfully!");
+        changePasswordDialog.close();
+
+        // Clear inputs & reset UI state
+        currentPass.value = "";
+        newPass.value = "";
+        confirmNewPass.value = "";
+        updateBtn.disabled = true;
+        errorDiv.style.display = "none";
+        document.getElementById("passMatchError").style.display = "none";
+      } else {
+        // Show backend error message
+        errorDiv.textContent = data.message || "An unexpected error occurred.";
+        errorDiv.style.display = "block";
+      }
+    });
+  });
+
+ document.addEventListener('DOMContentLoaded', function() {
+            const userType = localStorage.getItem('userType');
+            const homeLink = document.getElementById('home-link');
+            if (userType === 'technician') {
+                homeLink.href = 'technicianmenu';
+                const studentNameCells = document.querySelectorAll('.cell[data-title="Student Name"]');
+                studentNameCells.forEach(cell => cell.style.display = 'table-cell');
+            } else {
+                homeLink.href = 'menu';
+            }
+            })
+
   </script>
 </body>
 </html>
