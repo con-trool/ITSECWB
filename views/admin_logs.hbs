@@ -129,6 +129,50 @@
       font-size: 16px;
       margin-top: 10px;
     }
+    
+     .rule-item {
+      list-style: none;
+      position: relative;
+      padding-left: 1.75em;
+      font-size: 0.9em;
+      color: #555;
+      text-align: left;
+      line-height: 1.4;
+    }
+
+    .rule-item::before {
+      content: "❌";
+      position: absolute;
+      left: 0;
+      top: 0.05em;
+      color: red;
+    }
+
+    .rule-item.valid {
+      color: #006937;
+    }
+
+    .rule-item.valid::before {
+      content: "✅";
+      color: #006937;
+    }
+
+    .error {
+      color: red;
+      font-size: 0.9em;
+      margin-top: 0.25em;
+      display: none;
+    }
+
+    .close-btn {
+      position: absolute;
+      right: 20px;
+      top: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      color: red;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
