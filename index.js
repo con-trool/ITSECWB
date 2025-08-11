@@ -101,8 +101,31 @@ const allowGuest = (req, res, next) => {
   next();
 };
 
-app.get('/menu', allowGuest, async (req, res) => {
-   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+function formatManilaString(input) {
+  const d = new Date(input);
+  if (isNaN(d)) return '';
+
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Manila',
+    weekday: 'short',   // Mon
+    month: 'short',     // Aug
+    day: '2-digit',     // 04
+    year: 'numeric',    // 2025
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).formatToParts(d).reduce((acc, p) => {
+    acc[p.type] = p.value;
+    return acc;
+  }, {});
+
+  // "Mon Aug 04 2025 13:34:11"
+  return `${parts.weekday} ${parts.month} ${parts.day} ${parts.year} ${parts.hour}:${parts.minute}:${parts.second}`;
+}
+
+app.get('/menu', allowGuest, async (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   try {
     let user;
     if (req.isGuest) {
@@ -116,28 +139,35 @@ app.get('/menu', allowGuest, async (req, res) => {
     const userId = user.userID;
     const isTechnician = user.isTechnician;
 
-    // ✅ Pull last login info from session (if available)
-    const lastLoginInfo = req.session.lastLoginAttempt || null;
+    // pull from session
+    const raw = req.session.lastLoginAttempt || null;
 
-    // ✅ Optional: clear it after displaying once
+    // build object with preformatted Manila time
+    const lastLoginInfo = raw ? {
+      ...raw,
+      // keep original date for conditionals
+      date: raw.date,
+      // add preformatted string (Asia/Manila)
+      formattedDate: formatManilaString(raw.date)
+    } : null;
+
+    // clear after displaying once
     delete req.session.lastLoginAttempt;
 
     res.render('menu', {
       userId,
       isTechnician,
       isGuest: req.isGuest,
-      lastLoginInfo // ✅ pass it to template
+      lastLoginInfo
     });
   } catch (error) {
-    console.error('Error fetching user data:', { //for 2.3.1
+    console.error('Error fetching user data:', {
       message: error.message,
       stack: error.stack
     });
-
     next(error);
   }
 });
-
 
 app.get('/GOKSreserve', allowGuest, async (req, res) => {
   try {
@@ -247,7 +277,6 @@ app.post('/login', async (req, res, next) => {
   try {
     const user = await User.findOne({ username: email });
 
-    // ✅ Check if user exists
     if (!user) {
       await Log.create({
         userID: 0,
@@ -256,22 +285,15 @@ app.post('/login', async (req, res, next) => {
         details: `Login failed for unknown email: ${email}`,
         status: 'failure'
       });
-
       return res.render('login', {
         error: 'Invalid email or password.',
         credentials: { email, password }
       });
     }
 
-    // ✅ Defensive fallback: prevent crash if fields are missing
-    if (typeof user.failedLoginAttempts !== 'number') {
-      user.failedLoginAttempts = 0;
-    }
-    if (!user.lockUntil) {
-      user.lockUntil = null;
-    }
+    if (typeof user.failedLoginAttempts !== 'number') user.failedLoginAttempts = 0;
+    if (!user.lockUntil) user.lockUntil = null;
 
-    // ✅ Check if account is currently locked
     if (user.lockUntil && user.lockUntil > Date.now()) {
       await Log.create({
         userID: user.userID,
@@ -280,28 +302,23 @@ app.post('/login', async (req, res, next) => {
         details: `Attempted login while locked out: ${email}`,
         status: 'failure'
       });
-
       return res.render('login', {
         error: 'Your account is temporarily locked. Please try again later.',
         credentials: { email, password }
       });
     }
 
-    // ✅ Check password
     const isMatch = await bcrypt.compare(password, user.password);
 
-    // ✅ Update login attempt info
-    user.lastLoginAttempt = new Date();
-    user.lastLoginSuccess = isMatch;
-
     if (!isMatch) {
-      // ❌ Incorrect password: increment failed attempts
+      // ❌ Failed login → record attempt + false
+      user.lastLoginAttempt = new Date();
+      user.lastLoginSuccess = false;
+
       user.failedLoginAttempts += 1;
 
       if (user.failedLoginAttempts >= 5) {
-        const lockDuration = 15 * 60 * 1000; // 15 minutes
-        user.lockUntil = new Date(Date.now() + lockDuration);
-
+        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 min
         await user.save();
 
         await Log.create({
@@ -318,7 +335,7 @@ app.post('/login', async (req, res, next) => {
         });
       }
 
-      await user.save(); // Save increment
+      await user.save();
 
       await Log.create({
         userID: user.userID,
@@ -334,16 +351,15 @@ app.post('/login', async (req, res, next) => {
       });
     }
 
-    // ✅ Successful login: reset failed attempts
+    // ✅ Successful login → DO NOT touch lastLoginAttempt/lastLoginSuccess here
     user.failedLoginAttempts = 0;
     user.lockUntil = null;
     await user.save();
 
-    // ✅ Set session
+    // set session
     req.session.userId = user._id.toString();
     req.session.isTechnician = user.isTechnician;
     req.session.isAdmin = user.isAdmin;
-
     req.session.user = {
       _id: user._id,
       name: user.name,
@@ -357,22 +373,22 @@ app.post('/login', async (req, res, next) => {
       description: user.description
     };
 
+    // optional: keep this if you still want to show prior attempt result in the session
     req.session.lastLoginAttempt = {
       date: user.lastLoginAttempt,
       success: user.lastLoginSuccess
     };
 
-    // ✅ Handle rememberMe
     if (rememberMe) {
+      // ⚠️ consider not storing plaintext password here
       res.cookie('rememberMe', { email, password }, {
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true
       });
     } else {
       res.clearCookie('rememberMe');
     }
 
-    // ✅ Log success
     await Log.create({
       userID: user.userID,
       role: user.isAdmin ? 'admin' : user.isTechnician ? 'technician' : 'student',
@@ -381,18 +397,12 @@ app.post('/login', async (req, res, next) => {
       status: 'success'
     });
 
-    // ✅ Redirect based on role
-    if (user.isAdmin) {
-      return res.redirect('/admin');
-    } else if (user.isTechnician) {
-      return res.redirect('/technicianpage');
-    } else {
-      return res.redirect('/menu');
-    }
+    if (user.isAdmin) return res.redirect('/admin');
+    if (user.isTechnician) return res.redirect('/technicianpage');
+    return res.redirect('/menu');
 
   } catch (error) {
     console.error('Login error:', error);
-
     await Log.create({
       userID: 0,
       role: 'student',
@@ -400,94 +410,76 @@ app.post('/login', async (req, res, next) => {
       details: `Unhandled error during login: ${error.message}`,
       status: 'failure'
     });
-
-    next(error); // this will trigger your global error handler
+    next(error);
   }
 });
 
 
-
-app.get('/technicianpage', isAuthenticated, isTechnician, async (req, res) => {
-   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+app.get('/technicianpage', isAuthenticated, isTechnician, async (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   try {
-    // Fetch the currently logged-in user
     const currentUser = await User.findById(req.session.userId).exec();
-
-    // Fetch seat reservations
     const seats = await Seat.find({ isAvailable: false }).exec();
-
-    // Fetch all users
     const users = await User.find({}).exec();
 
-    // Map users by their userID for quick access in the template
     const usersMap = users.reduce((map, user) => {
-      if (user.userID) {
-        map[user.userID.toString()] = user;
-      }
+      if (user.userID) map[user.userID.toString()] = user;
       return map;
     }, {});
 
-    console.log('Seats:', seats);
-    console.log('Users:', usersMap);
+    const lastLoginInfo = currentUser ? {
+      date: currentUser.lastLoginAttempt || null, // keep raw for conditionals
+      formattedDate: currentUser.lastLoginAttempt
+        ? formatManilaString(currentUser.lastLoginAttempt)
+        : '',
+      success: currentUser.lastLoginSuccess
+    } : null;
 
     res.render('technicianpage', {
-    user: req.session.user,
-    seats: seats,
-    users: usersMap,
-    lastLoginInfo: {
-      date: currentUser?.lastLoginAttempt 
-        ? currentUser.lastLoginAttempt.toLocaleString()  // 👈 format the date
-        : null,
-      success: currentUser?.lastLoginSuccess
-    }
-  });
-
+      user: req.session.user,
+      seats,
+      users: usersMap,
+      lastLoginInfo
+    });
   } catch (error) {
     console.error('Error fetching reservations:', error);
     next(error);
   }
 });
 
-app.get('/admin', isAuthenticated, isAdmin, async (req, res) =>{
-   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+
+app.get('/admin', isAuthenticated, isAdmin, async (req, res, next) =>{
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   try {
-    // Fetch the currently logged-in user
     const currentUser = await User.findById(req.session.userId).exec();
-
-    // Fetch seat reservations
     const seats = await Seat.find({ isAvailable: false }).exec();
-
-    // Fetch all users
     const users = await User.find({}).exec();
 
-    // Map users by their userID for quick access in the template
     const usersMap = users.reduce((map, user) => {
-      if (user.userID) {
-        map[user.userID.toString()] = user;
-      }
+      if (user.userID) map[user.userID.toString()] = user;
       return map;
     }, {});
 
-    console.log('Seats:', seats);
-    console.log('Users:', usersMap);
+    const lastLoginInfo = currentUser ? {
+      date: currentUser.lastLoginAttempt || null,
+      formattedDate: currentUser.lastLoginAttempt
+        ? formatManilaString(currentUser.lastLoginAttempt)
+        : '',
+      success: currentUser.lastLoginSuccess
+    } : null;
 
     res.render('admin', {
-    user: req.session.user,
-    seats: seats,
-    users: usersMap,
-    lastLoginInfo: {
-      date: currentUser?.lastLoginAttempt 
-        ? currentUser.lastLoginAttempt.toLocaleString()  // 👈 format the date
-        : null,
-      success: currentUser?.lastLoginSuccess
-    }
-  });
-
+      user: req.session.user,
+      seats,
+      users: usersMap,
+      lastLoginInfo
+    });
   } catch (error) {
     console.error('Error fetching reservations:', error);
     next(error);
   }
 });
+
 
 app.get('/admin/users', isAuthenticated, isAdmin, async (req, res) =>{
    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -541,7 +533,7 @@ app.post('/admin/promote', isAuthenticated, isAdmin, async (req, res) => {
         userID: actingUserID,
         role: actingRole,
         action: 'promote',
-        details: `Promotion failed - user not found (ID: ${userId})`,
+        details: `Promotion failed - technician not found (ID: ${userId})`,
         status: 'failure'
       });
 
@@ -556,7 +548,7 @@ app.post('/admin/promote', isAuthenticated, isAdmin, async (req, res) => {
       userID: actingUserID,
       role: actingRole,
       action: 'promote',
-      details: `Promoted user with ID ${userToPromote.userID} to admin`,
+      details: `Promoted technician with ID ${userToPromote.userID} to admin`,
       status: 'success'
     });
 
@@ -653,7 +645,8 @@ app.post('/register', async (req, res) => {
       securityQuestion,
       securityAnswer,
       isTechnician: isTechnician === 'true',
-      userID
+      userID,
+      passwordHistory: [hashedPassword]
     });
 
     await newUser.save();
@@ -847,6 +840,12 @@ function getUserRole(session) {
 
 const util = require('util');
 
+function getUserRole(session) {
+  if (session?.isAdmin) return 'admin';
+  if (session?.isTechnician) return 'technician';
+  return 'student';
+}
+
 app.get('/logout', async (req, res) => {
   const userID = req.session.user?.userID || 0;
   const role = getUserRole(req.session);
@@ -854,8 +853,23 @@ app.get('/logout', async (req, res) => {
   const destroySession = util.promisify(req.session.destroy).bind(req.session);
 
   try {
+    // ✅ Overwrite fields on successful session logout
+    const mongoId = req.session.userId;
+    if (mongoId) {
+      try {
+        const user = await User.findById(mongoId);
+        if (user) {
+          user.lastLoginAttempt = new Date(); // overwrite at logout time
+          user.lastLoginSuccess = true;       // mark that the last completed session was successful
+          await user.save();
+        }
+      } catch (e) {
+        console.error('Failed to update last login fields on logout:', e);
+      }
+    }
+
     await destroySession();
-    res.clearCookie('connect.sid'); // Ensure session cookie is cleared
+    res.clearCookie('connect.sid');
 
     await Log.create({
       userID,
@@ -1114,7 +1128,7 @@ app.get('/api/users', async (req, res) => {
   const { query, college, degree } = req.query;
 
   try {
-    const filter = { isTechnician: false ,  userID: { $ne: 1 }   };
+    const filter = { isAdmin: false || null, isTechnician: false ,  userID: { $ne: 1 }   };
 
     if (query) {
       filter.name = { $regex: query, $options: 'i' }; // Case-insensitive search
@@ -1212,77 +1226,92 @@ app.post('/submit-form', async (req, res) => {
 });
 
 app.post('/api/cancel', isAuthenticated, async (req, res, next) => {
-  const { date, timeslot, seatID, userID } = req.body;
+  const { date, timeslot, seatID, userID: bodyUserID } = req.body;
   const currentUser = req.session.user;
 
-  const actingUserID = currentUser?.userID || 0;
   const actingRole = currentUser?.isAdmin
     ? 'admin'
     : currentUser?.isTechnician
       ? 'technician'
       : 'student';
 
-  console.log(`Cancel request by ${actingRole} (userID: ${actingUserID}) for reservation of userID: ${userID}`, {
+  // normalize ids to strings
+  const sessionUserID   = String(currentUser?.userID ?? '0');
+  const requestedUserID = bodyUserID != null ? String(bodyUserID) : null;
+  const isPrivileged    = !!(currentUser?.isAdmin || currentUser?.isTechnician);
+
+  // who is the action for?
+  const targetUserID = isPrivileged ? (requestedUserID || sessionUserID) : sessionUserID;
+
+  // students trying to cancel for someone else?
+  if (!isPrivileged && requestedUserID && requestedUserID !== sessionUserID) {
+    await Log.create({
+      userID: sessionUserID,
+      role: actingRole,
+      action: 'cancel_booking',
+      details: `Unauthorized cancel attempt by student. Target userID: ${requestedUserID}`,
+      status: 'failure'
+    });
+    return res.status(403).json({ success: false, message: 'Unauthorized to cancel this reservation' });
+  }
+
+  console.log(`Cancel request by ${actingRole} (${sessionUserID}) for reservation of userID: ${targetUserID}`, {
     seatID, date, timeslot
   });
 
   try {
-    // Students can only cancel their own bookings
-    if (actingRole === 'student' && actingUserID !== userID) {
-      await Log.create({
-        userID: actingUserID,
-        role: actingRole,
-        action: 'cancel_booking',
-        details: `Unauthorized cancel attempt by student on reservation of userID: ${userID}`,
-        status: 'failure'
-      });
-
-      return res.status(403).json({ success: false, message: 'Unauthorized to cancel this reservation' });
-    }
-
-    const query = { seatID, date, time: timeslot, userID: userID || null };
+    // must match the user's reservation
+    const query = { seatID, date, time: timeslot, userID: targetUserID };
     const seat = await Seat.findOne(query);
 
-    if (seat) {
-      seat.isAvailable = true;
-      seat.userID = null;
-      seat.isAnonymous = false;
-      await seat.save();
+    if (!seat) {
+      // fetch what exists at that key to help debugging
+      const existing = await Seat.findOne({ seatID, date, time: timeslot });
+      const snapshot = existing ? {
+        seatID: existing.seatID,
+        date: existing.date,
+        time: existing.time,
+        isAvailable: existing.isAvailable,
+        userID: existing.userID ?? null
+      } : null;
 
       await Log.create({
-        userID: actingUserID,
+        userID: sessionUserID,
         role: actingRole,
         action: 'cancel_booking',
-        details: `${actingRole} canceled reservation for userID: ${userID}, seatID: ${seatID}, date: ${date}, time: ${timeslot}`,
-        status: 'success'
-      });
-
-      res.json({ success: true });
-
-    } else {
-      await Log.create({
-        userID: actingUserID,
-        role: actingRole,
-        action: 'cancel_booking',
-        details: `Cancel failed - Seat not found or unauthorized. Target userID: ${userID}, seatID: ${seatID}, date: ${date}, time: ${timeslot}`,
+        details: `Cancel failed - Seat not found for user or unauthorized. Target userID: ${targetUserID}, seatID: ${seatID}, date: ${date}, time: ${timeslot}. Seat snapshot: ${JSON.stringify(snapshot)}`,
         status: 'failure'
       });
 
-      res.json({ success: false, message: 'Seat not found or user not authorized to cancel this reservation' });
+      return res.status(404).json({ success: false, message: 'Seat not found for this user' });
     }
+
+    // perform cancel
+    seat.isAvailable = true;
+    seat.userID = null;
+    seat.isAnonymous = false; // keep your current behavior; set true if you prefer
+    await seat.save();
+
+    await Log.create({
+      userID: sessionUserID,
+      role: actingRole,
+      action: 'cancel_booking',
+      details: `${actingRole} canceled reservation for userID: ${targetUserID}, seatID: ${seatID}, date: ${date}, time: ${timeslot}`,
+      status: 'success'
+    });
+
+    return res.json({ success: true });
 
   } catch (error) {
     console.error('Cancel reservation error:', error);
-
     await Log.create({
-      userID: actingUserID,
+      userID: sessionUserID,
       role: actingRole,
       action: 'cancel_booking',
-      details: `Unhandled error during cancel_booking for userID: ${userID} - ${error.message}`,
+      details: `Unhandled error during cancel_booking for userID: ${targetUserID} - ${error.message}`,
       status: 'failure'
     });
-
-    next(error);
+    return next(error);
   }
 });
 
@@ -1290,7 +1319,8 @@ app.post('/api/editReservation', isAuthenticated, async (req, res, next) => {
   const {
     oldDate, oldTimeslot, oldSeatID,
     newDate, newTimeslot, newSeatID,
-    userID, isAnonymous
+    userID: bodyUserID,
+    isAnonymous
   } = req.body;
 
   const currentUser = req.session.user; // logged-in user
@@ -1300,75 +1330,99 @@ app.post('/api/editReservation', isAuthenticated, async (req, res, next) => {
       ? 'technician'
       : 'student';
 
-  console.log(`Edit reservation request by ${actingRole} ${currentUser.userID} for student ${userID}`, {
+  // Normalize IDs to avoid 123 !== "123" surprises
+  const sessionUserID = String(currentUser.userID);
+  const requestedUserID = bodyUserID != null ? String(bodyUserID) : null;
+
+  const isPrivileged = !!(currentUser.isAdmin || currentUser.isTechnician);
+
+  // Who is the action for?
+  const targetUserID = isPrivileged
+    ? (requestedUserID || sessionUserID)
+    : sessionUserID;
+
+  // Students trying to act for someone else?
+  if (!isPrivileged && requestedUserID && requestedUserID !== sessionUserID) {
+    await Log.create({
+      userID: sessionUserID,
+      role: actingRole,
+      action: 'edit_booking',
+      details: `Unauthorized attempt to edit another user's reservation (Target User: ${requestedUserID})`,
+      status: 'failure'
+    });
+    return res.status(403).json({ success: false, message: 'Unauthorized to edit this reservation' });
+  }
+
+  console.log(`Edit reservation request by ${actingRole} ${sessionUserID} for user ${targetUserID}`, {
     oldDate, oldTimeslot, oldSeatID, newDate, newTimeslot, newSeatID, isAnonymous
   });
 
   try {
-    // Role check: only allow students to edit their own reservations
-    if (!currentUser.isTechnician && !currentUser.isAdmin && currentUser.userID !== userID) {
-      await Log.create({
-        userID: currentUser.userID,
-        role: actingRole,
-        action: 'edit_booking',
-        details: `Unauthorized attempt to edit another user's reservation (Target User: ${userID})`,
-        status: 'failure'
-      });
-
-      return res.status(403).json({ success: false, message: 'Unauthorized to edit this reservation' });
-    }
-
     // CASE 1: Just updating anonymity flag
     if (oldDate === newDate && oldTimeslot === newTimeslot && oldSeatID === newSeatID) {
-      const seat = await Seat.findOne({ seatID: oldSeatID, date: oldDate, time: oldTimeslot, userID });
-      if (seat) {
-        seat.isAnonymous = isAnonymous;
-        await seat.save();
+      const seat = await Seat.findOne({
+        seatID: oldSeatID,
+        date: oldDate,
+        time: oldTimeslot,
+        userID: targetUserID
+      });
 
+      if (!seat) {
         await Log.create({
-          userID: currentUser.userID,
+          userID: sessionUserID,
           role: actingRole,
           action: 'edit_booking',
-          details: `${actingRole} updated anonymity for reservation (User: ${userID}, SeatID: ${oldSeatID})`,
-          status: 'success'
-        });
-
-        return res.json({ success: true });
-      } else {
-        await Log.create({
-          userID: currentUser.userID,
-          role: actingRole,
-          action: 'edit_booking',
-          details: `Seat not found or unauthorized to update (User: ${userID}, SeatID: ${oldSeatID})`,
+          details: `Seat not found or unauthorized to update (User: ${targetUserID}, SeatID: ${oldSeatID})`,
           status: 'failure'
         });
-
         return res.status(404).json({ success: false, message: 'Seat not found or unauthorized' });
       }
+
+      seat.isAnonymous = !!isAnonymous;
+      await seat.save();
+
+      await Log.create({
+        userID: sessionUserID,
+        role: actingRole,
+        action: 'edit_booking',
+        details: `${actingRole} updated anonymity for reservation (User: ${targetUserID}, SeatID: ${oldSeatID})`,
+        status: 'success'
+      });
+
+      return res.json({ success: true });
     }
 
     // CASE 2: Changing to a different seat
     const newSeat = await Seat.findOne({ seatID: newSeatID, date: newDate, time: newTimeslot });
-    if (!newSeat || !newSeat.isAvailable) {
-      await Log.create({
-        userID: currentUser.userID,
-        role: actingRole,
-        action: 'edit_booking',
-        details: `Failed seat change for user ${userID}. New seat invalid or already reserved.`,
-        status: 'failure'
-      });
 
-      return res.status(400).json({ success: false, message: 'New seat not available' });
-    }
+if (!newSeat || !newSeat.isAvailable) {
+  const seatSnapshot = newSeat ? {
+    seatID: newSeat.seatID,
+    date: newSeat.date,
+    time: newSeat.time,
+    isAvailable: newSeat.isAvailable,
+    userID: newSeat.userID ?? null
+  } : null;
+
+  await Log.create({
+    userID: sessionUserID,
+    role: actingRole,
+    action: 'edit_booking',
+    details: `Failed seat change for user ${targetUserID}. New seat invalid or already reserved. Seat snapshot: ${JSON.stringify(seatSnapshot)}`,
+    status: 'failure'
+  });
+
+  return res.status(400).json({ success: false, message: 'New seat not available' });
+}
 
     // Reserve the new seat
     newSeat.isAvailable = false;
-    newSeat.userID = userID;
-    newSeat.isAnonymous = isAnonymous;
+    newSeat.userID = targetUserID;
+    newSeat.isAnonymous = !!isAnonymous;
     await newSeat.save();
 
-    // Release old seat
-    const oldSeat = await Seat.findOne({ seatID: oldSeatID, date: oldDate, time: oldTimeslot, userID });
+    // Release old seat (only the caller's)
+    const oldSeat = await Seat.findOne({ seatID: oldSeatID, date: oldDate, time: oldTimeslot, userID: targetUserID });
     if (oldSeat) {
       oldSeat.isAvailable = true;
       oldSeat.userID = null;
@@ -1377,29 +1431,27 @@ app.post('/api/editReservation', isAuthenticated, async (req, res, next) => {
     }
 
     await Log.create({
-      userID: currentUser.userID,
+      userID: sessionUserID,
       role: actingRole,
       action: 'edit_booking',
-      details: `${actingRole} changed reservation for user ${userID} from ${oldSeatID} to ${newSeatID}`,
+      details: `${actingRole} changed reservation for user ${targetUserID} from ${oldSeatID} to ${newSeatID}`,
       status: 'success'
     });
 
     return res.json({ success: true });
-
   } catch (error) {
     console.error('Edit reservation error:', error);
-
     await Log.create({
-      userID: currentUser.userID || 0,
+      userID: sessionUserID || '0',
       role: actingRole,
       action: 'edit_booking',
-      details: `Unhandled error during edit_booking for user ${userID}: ${error.message}`,
+      details: `Unhandled error during edit_booking for user ${targetUserID}: ${error.message}`,
       status: 'failure'
     });
-
     next(error);
   }
 });
+
 
 
 app.get('/api/searchUser', async (req, res) => {
@@ -1523,16 +1575,15 @@ app.post("/change-password", async (req, res) => {
   const { currentPassword, newPassword } = req.body;
   const user = await User.findById(req.session.userId);
 
+  if (!user) {
+    return res.status(401).json({ success: false, message: "Not authenticated" });
+  }
+
   const actingUserID = user.userID;
-  const actingRole = user.isAdmin
-    ? 'admin'
-    : user.isTechnician
-      ? 'technician'
-      : 'student';
+  const actingRole = user.isAdmin ? 'admin' : user.isTechnician ? 'technician' : 'student';
 
   try {
     const match = await bcrypt.compare(currentPassword, user.password);
-
     if (!match) {
       await Log.create({
         userID: actingUserID,
@@ -1541,12 +1592,11 @@ app.post("/change-password", async (req, res) => {
         details: 'Failed password change attempt - incorrect current password',
         status: 'failure'
       });
-
       return res.json({ success: false, message: "Incorrect current password." });
     }
 
     const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     if (user.lastPasswordChange && user.lastPasswordChange > oneDayAgo) {
       await Log.create({
@@ -1556,18 +1606,16 @@ app.post("/change-password", async (req, res) => {
         details: 'Password change blocked - cooldown period not met (24h)',
         status: 'failure'
       });
-
       return res.json({
         success: false,
         message: "You can only change your password once every 24 hours."
       });
     }
 
-    // Check for password reuse
-    if (user.passwordHistory && user.passwordHistory.length > 0) {
+    // Reuse check
+    if (user.passwordHistory?.length) {
       for (const oldHash of user.passwordHistory) {
-        const isReused = await bcrypt.compare(newPassword, oldHash);
-        if (isReused) {
+        if (await bcrypt.compare(newPassword, oldHash)) {
           await Log.create({
             userID: actingUserID,
             role: actingRole,
@@ -1575,7 +1623,6 @@ app.post("/change-password", async (req, res) => {
             details: 'Password change blocked - reused password detected',
             status: 'failure'
           });
-
           return res.json({
             success: false,
             message: "This password has already been used. Please choose a unique password."
@@ -1586,19 +1633,10 @@ app.post("/change-password", async (req, res) => {
 
     const hashed = await bcrypt.hash(newPassword, 10);
 
-    // Save new password
     user.password = hashed;
     user.lastPasswordChange = now;
-
-    // Initialize history if not existing
-    if (!user.passwordHistory) {
-      user.passwordHistory = [];
-    }
-
-    // Add new hash to history
+    user.passwordHistory = user.passwordHistory || [];
     user.passwordHistory.push(hashed);
-
-    // Keep only last 5 passwords
     if (user.passwordHistory.length > 5) {
       user.passwordHistory = user.passwordHistory.slice(-5);
     }
@@ -1613,11 +1651,46 @@ app.post("/change-password", async (req, res) => {
       status: 'success'
     });
 
-    res.json({ success: true });
+    // 🔒 Immediately log the user out
+    const destroySession = util.promisify(req.session.destroy).bind(req.session);
+    try {
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'logout',
+        details: 'Auto-logout after password change',
+        status: 'success'
+      });
+
+      await destroySession();
+      res.clearCookie('connect.sid'); // adjust if you use a custom cookie name
+
+      return res.json({
+        success: true,
+        loggedOut: true,
+        redirect: '/login',
+        message: 'Password changed. You have been logged out for security.'
+      });
+    } catch (logoutErr) {
+      console.error('Session destroy failed after password change:', logoutErr);
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'logout',
+        details: `Auto-logout failed after password change: ${logoutErr.message}`,
+        status: 'failure'
+      });
+      // Password is changed, but session still alive; tell client to redirect anyway
+      return res.json({
+        success: true,
+        loggedOut: false,
+        redirect: '/login',
+        message: 'Password changed. Please log in again.'
+      });
+    }
 
   } catch (error) {
     console.error('Change password error:', error);
-
     await Log.create({
       userID: actingUserID || 0,
       role: actingRole || 'student',
@@ -1625,8 +1698,7 @@ app.post("/change-password", async (req, res) => {
       details: `Unhandled error during password change: ${error.message}`,
       status: 'failure'
     });
-
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 

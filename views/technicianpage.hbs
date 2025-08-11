@@ -395,12 +395,13 @@
 {{#if lastLoginInfo.date}}
   <div id="login-alert" class="login-alert {{#if lastLoginInfo.success}}success{{else}}error{{/if}}">
     {{#if lastLoginInfo.success}}
-      Last account access: {{lastLoginInfo.date}} (Successful)
+      Last account access: {{lastLoginInfo.formattedDate}} (Successful)
     {{else}}
-      Most recent login attempt: {{lastLoginInfo.date}} (Unsuccessful)
+      Most recent login attempt: {{lastLoginInfo.formattedDate}} (Unsuccessful)
     {{/if}}
   </div>
 {{/if}}
+
 
     <div class="logo">
         <img src="html/IndexIMG/Logo.png" alt="LabSpot Logo">
@@ -655,6 +656,7 @@
         updateBtn.disabled = true;
         errorDiv.style.display = "none";
         document.getElementById("passMatchError").style.display = "none";
+         window.location.href = data.redirect || '/login';
       } else {
         // Show backend error message
         errorDiv.textContent = data.message || "An unexpected error occurred.";

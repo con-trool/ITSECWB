@@ -290,8 +290,14 @@
             <label for="description">Description:</label>
             <textarea id="description" name="description" placeholder="{{user.description}}">{{user.description}}</textarea>
             
-            <label for="picture">Upload a picture:</label>
-            <input type="file" id="picture" name="picture" accept="image/*">
+           <label for="picture">Upload a picture:</label>
+                <input
+                type="file"
+                id="picture"
+                name="picture"
+                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                />
+            <div id="pictureError" class="error">Only JPG or PNG files are allowed.</div>
             
             <div class="center">
                 <button class="bdialog" type="submit">Save</button>
@@ -326,6 +332,48 @@
   </dialog>
 
 <script>
+        document.addEventListener("DOMContentLoaded", () => {
+        const pictureInput = document.getElementById("picture");
+        const pictureError = document.getElementById("pictureError");
+        const form = document.querySelector("form[action='/update-user']");
+
+        const allowedTypes = ["image/jpeg", "image/png"];
+        const allowedExts  = [".jpg", ".jpeg", ".png"];
+
+        function isValid(file) {
+            if (!file) return true; // allow empty (no change)
+            const nameOk = allowedExts.some(ext => file.name.toLowerCase().endsWith(ext));
+            const typeOk = allowedTypes.includes(file.type);
+            // accept either a known MIME or a safe extension (covers browsers that mislabel type)
+            return nameOk || typeOk;
+        }
+
+        function showError(msg) {
+            pictureError.textContent = msg;
+            pictureError.style.display = "block";
+        }
+        function clearError() {
+            pictureError.style.display = "none";
+        }
+
+        pictureInput.addEventListener("change", () => {
+            const f = pictureInput.files[0];
+            if (!isValid(f)) {
+            showError("Only .jpg or .png files are allowed.");
+            pictureInput.value = ""; // clear the invalid file
+            } else {
+            clearError();
+            }
+        });
+
+        form.addEventListener("submit", (e) => {
+            const f = pictureInput.files[0];
+            if (f && !isValid(f)) {
+            e.preventDefault();
+            showError("Only .jpg or .png files are allowed.");
+            }
+        });
+        });
     document.addEventListener("DOMContentLoaded", () => {
     const currentPass = document.getElementById("currentPass");
     const newPass = document.getElementById("newPass");
@@ -392,6 +440,7 @@
         // Show backend error message
         errorDiv.textContent = data.message || "An unexpected error occurred.";
         errorDiv.style.display = "block";
+        window.location.href = data.redirect || '/login';
       }
     });
   });

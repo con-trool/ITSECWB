@@ -310,6 +310,7 @@
         updateBtn.disabled = true;
         errorDiv.style.display = "none";
         document.getElementById("passMatchError").style.display = "none";
+         window.location.href = data.redirect || '/login';
       } else {
         // Show backend error message
         errorDiv.textContent = data.message || "An unexpected error occurred.";

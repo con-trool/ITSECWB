@@ -236,9 +236,9 @@
 {{#if lastLoginInfo.date}}
   <div id="login-alert" class="login-alert {{#if lastLoginInfo.success}}success{{else}}error{{/if}}">
     {{#if lastLoginInfo.success}}
-      Last account access: {{lastLoginInfo.date}} (Successful)
+      Last account access: {{lastLoginInfo.formattedDate}} (Successful)
     {{else}}
-      Most recent login attempt: {{lastLoginInfo.date}} (Unsuccessful)
+      Most recent login attempt: {{lastLoginInfo.formattedDate}} (Unsuccessful)
     {{/if}}
   </div>
 {{/if}}

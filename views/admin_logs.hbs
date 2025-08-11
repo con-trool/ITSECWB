@@ -201,10 +201,11 @@
     <option value="register">Register</option>
     <option value="login">Login</option>
     <option value="logout">Logout</option>
-    <option value="reserve-seat">Reserve Seat</option>
-    <option value="cancel-reservation">Cancel Reservation</option>
-    <option value="promote-user">Promote User</option>
-    <option value="change-password">Change Password</option>
+    <option value="booking">Reserve Seat</option>
+    <option value="edit_booking">Edit Reservation</option>
+    <option value="cancel_booking">Cancel Reservation</option>
+    <option value="promote">Promote User</option>
+    <option value="change_password">Change Password</option>
     <!-- Add more as needed -->
   </select>
 
@@ -319,6 +320,7 @@
         updateBtn.disabled = true;
         errorDiv.style.display = "none";
         document.getElementById("passMatchError").style.display = "none";
+         window.location.href = data.redirect || '/login';
       } else {
         // Show backend error message
         errorDiv.textContent = data.message || "An unexpected error occurred.";
