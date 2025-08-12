@@ -1516,6 +1516,20 @@ app.post('/api/bookReservation', async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Unauthorized to book for another user' });
     }
 
+    // ✅ NEW: ensure the target user exists
+    const targetUser = await User.findOne({ userID }); // or User.findById(userID) if you use _id
+    if (!targetUser) {
+      await Log.create({
+        userID: actingUserID,
+        role: actingRole,
+        action: 'booking',
+        details: `Booking failed - target user not found (Target: ${userID})`,
+        status: 'failure'
+      });
+
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
     const seat = await Seat.findOne({ seatID, date, time });
     console.log('Seat fetched:', seat);
 
@@ -1559,7 +1573,6 @@ app.post('/api/bookReservation', async (req, res, next) => {
     });
 
     res.json({ success: true });
-
   } catch (error) {
     console.error('Booking error:', error);
 
