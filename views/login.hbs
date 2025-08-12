@@ -182,31 +182,6 @@
       </div>
       {{#if error}}
         <div class="error-message" id="login-error">{{error}}</div>
-
-        <!-- Lockout Popup -->
-        <dialog id="lockout-dialog">
-          <h3 style="color: darkred; font-weight: bold;">Account Locked</h3>
-          <p>{{error}}</p>
-          <button onclick="document.getElementById('lockout-dialog').close()">OK</button>
-        </dialog>
-
-        <script>
-        const errorText = `{{error}}`;
-        const alreadyShown = sessionStorage.getItem('lockoutShown');
-
-        if (errorText.toLowerCase().includes('locked') && !alreadyShown) {
-          const dialog = document.getElementById('lockout-dialog');
-          if (dialog) {
-            dialog.showModal();
-            sessionStorage.setItem('lockoutShown', 'true');
-          }
-        }
-
-        // Reset the flag when dialog is closed
-        document.getElementById('lockout-dialog').addEventListener('close', () => {
-          sessionStorage.removeItem('lockoutShown');
-        });
-      </script>
       {{/if}}
 
       <div class="form-group form-check">
