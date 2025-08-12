@@ -574,7 +574,25 @@ app.get('/register', function (req, res) {
   res.render('register');
 });
 
-app.post('/register', async (req, res) => {
+// Put this near your routes
+function lengthValidatorJson(req, res, next) {
+  const email = (req.body.email ?? '').toString().trim();
+  const password = (req.body.password ?? '').toString();
+  const securityAnswer = (req.body.securityAnswer ?? '').toString().trim();
+  const cpLen = s => [...s].length;
+
+  if (cpLen(email) > 254)
+    return res.status(400).json({ success: false, message: 'Email must be 254 characters or fewer.' });
+  if (cpLen(password) > 128)
+    return res.status(400).json({ success: false, message: 'Password must be 128 characters or fewer.' });
+  if (securityAnswer && cpLen(securityAnswer) > 128)
+    return res.status(400).json({ success: false, message: 'Security answer must be 128 characters or fewer.' });
+
+  req.body.email = email; // normalized for downstream
+  next();
+}
+
+app.post('/register', lengthValidatorJson, async (req, res) => {
   try {
     const {
       email,

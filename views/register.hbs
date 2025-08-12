@@ -9,193 +9,36 @@
   <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap'>
 
   <style>
-    * {
-      font-family: "Poppins", sans-serif;
-      box-sizing: border-box;
-    }
-
+    * { font-family: "Poppins", sans-serif; box-sizing: border-box; }
     body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background-image: url('html/GeneralIMG/StandardBG.png');
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-      background-position: center;
+      margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; background-image: url('html/GeneralIMG/StandardBG.png');
+      background-size: cover; background-repeat: no-repeat; background-attachment: fixed; background-position: center;
     }
-
-    .screen-1 {
-      width: 90%;
-      max-width: 500px;
-      background: #f1f7fe;
-      padding: 2em;
-      border-radius: 30px;
-      box-shadow: 0 0 2em #e6e9f9;
-    }
-
-    .logo {
-      display: block;
-      margin: 0 auto 1em;
-      width: 100%;
-      max-width: 150px;
-    }
-
-    label {
-      font-weight: 600;
-      color: #4d4d4d;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 0.5em;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      margin-top: 0.5em;
-      font-size: 1em;
-    }
-
-    .login {
-      width: 100%;
-      padding: 0.75em;
-      background: #006937;
-      color: white;
-      border: none;
-      border-radius: 30px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 1em;
-    }
-
-    .error {
-      color: red;
-      font-size: 0.875em;
-      margin-top: 0.25em;
-    }
-
-    .rule-item {
-      list-style: none;
-      margin: 6px 0;
-      padding-left: 1.75em;
-      position: relative;
-      color: #555;
-      font-size: 0.9em;
-    }
-
-    .rule-item::before {
-      content: "❌";
-      position: absolute;
-      left: 0;
-      color: red;
-    }
-
-    .rule-item.valid {
-      color: #006937;
-    }
-
-    .rule-item.valid::before {
-      content: "✅";
-      color: #006937;
-    }
-
-    .container h1 {
-      font-size: 1.2em;
-      color: #000;
-      margin-bottom: 0.5em;
-      text-align: left;
-    }
-
-    .container label {
-      display: block;
-      margin: 0.5em 0;
-    }
-
-    .container span {
-      display: block;
-      width: 100%;
-      padding: 0.75em;
-      border-radius: 20px;
-      text-align: center;
-      font-weight: 600;
-      color: #006937;
-      background-color: transparent;
-      transition: background-color 0.3s, color 0.3s;
-    }
-
-    .container input[type="radio"] {
-      display: none;
-    }
-
-    .container input[type="radio"]:checked + span {
-      background-color: #6db282;
-      color: white;
-    }
-
-    dialog {
-      padding: 2em;
-      border: none;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      font-family: "Poppins", sans-serif;
-      text-align: center;
-      max-width: 300px;
-    }
-
-    dialog::backdrop {
-      background: rgba(0, 0, 0, 0.4);
-    }
-
-    .bdialog {
-      margin-top: 1em;
-      padding: 0.5em 1.2em;
-      border: none;
-      border-radius: 20px;
-      background-color: #006937;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .footer {
-      text-align: center;
-      font-size: 0.8em;
-      color: #5e5e5e;
-      margin-top: 1em;
-    }
-    .footer a {
-      text-decoration: none;
-      color: #5e5e5e;
-    }
-
-    .password-container {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .password-container input {
-      width: 100%;
-      padding-right: 2.5em;
-    }
-
-    .toggle-password {
-      position: absolute;
-      right: 0.75em;
-      cursor: pointer;
-      color: #666;
-      font-size: 1.2em;
-    }
-
-    .error-message {
-      color: red;
-      font-size: 0.9em;
-      margin-top: 4px;
-      display: none;
-    }
-
-
+    .screen-1 { width: 90%; max-width: 500px; background: #f1f7fe; padding: 2em; border-radius: 30px; box-shadow: 0 0 2em #e6e9f9; }
+    .logo { display: block; margin: 0 auto 1em; width: 100%; max-width: 150px; }
+    label { font-weight: 600; color: #4d4d4d; }
+    input, select { width: 100%; padding: 0.5em; border: 1px solid #ddd; border-radius: 5px; margin-top: 0.5em; font-size: 1em; }
+    .login { width: 100%; padding: 0.75em; background: #006937; color: white; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; margin-top: 1em; }
+    .error { color: red; font-size: 0.875em; margin-top: 0.25em; }
+    .rule-item { list-style: none; margin: 6px 0; padding-left: 1.75em; position: relative; color: #555; font-size: 0.9em; }
+    .rule-item::before { content: "❌"; position: absolute; left: 0; color: red; }
+    .rule-item.valid { color: #006937; }
+    .rule-item.valid::before { content: "✅"; color: #006937; }
+    .container h1 { font-size: 1.2em; color: #000; margin-bottom: 0.5em; text-align: left; }
+    .container label { display: block; margin: 0.5em 0; }
+    .container span { display: block; width: 100%; padding: 0.75em; border-radius: 20px; text-align: center; font-weight: 600; color: #006937; background-color: transparent; transition: background-color 0.3s, color 0.3s; }
+    .container input[type="radio"] { display: none; }
+    .container input[type="radio"]:checked + span { background-color: #6db282; color: white; }
+    dialog { padding: 2em; border: none; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.3); font-family: "Poppins", sans-serif; text-align: center; max-width: 300px; }
+    dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+    .bdialog { margin-top: 1em; padding: 0.5em 1.2em; border: none; border-radius: 20px; background-color: #006937; color: white; font-weight: 600; cursor: pointer; }
+    .footer { text-align: center; font-size: 0.8em; color: #5e5e5e; margin-top: 1em; }
+    .footer a { text-decoration: none; color: #5e5e5e; }
+    .password-container { position: relative; display: flex; align-items: center; }
+    .password-container input { width: 100%; padding-right: 2.5em; }
+    .toggle-password { position: absolute; right: 0.75em; cursor: pointer; color: #666; font-size: 1.2em; }
+    .error-message { color: red; font-size: 0.9em; margin-top: 4px; display: none; }
   </style>
 </head>
 <body>
@@ -203,19 +46,22 @@
     <img class="logo" src="html/GeneralIMG/Logo.png" alt="Logo">
     <form id="registerForm">
       <label for="email">Email Address</label>
-      <input type="email" id="email" name="email" placeholder="username@dlsu.edu.ph" required />
+      <!-- MAX EMAIL 254 -->
+      <input type="email" id="email" name="email" placeholder="username@dlsu.edu.ph" required maxlength="254" autocomplete="username" />
       <div id="email-error" class="error" style="display: none;">Must use a DLSU email.</div>
       <div id="email-exists-error" class="error" style="display: none;">Email already registered.</div>
 
       <label for="password">Password</label>
       <div class="password-container">
-        <input id="password" type="password" name="password" required />
+        <!-- MAX PASSWORD 128 -->
+        <input id="password" type="password" name="password" required maxlength="128" autocomplete="new-password" />
         <ion-icon class="toggle-password" name="eye-off-outline" onclick="togglePassword('password', this)"></ion-icon>
       </div>
 
-
       <ul id="password-rules">
         <li id="rule-length" class="rule-item">At least 8 characters</li>
+        <!-- NEW: explicit max rule -->
+        <li id="rule-max" class="rule-item">No more than 128 characters</li>
         <li id="rule-uppercase" class="rule-item">At least one uppercase letter</li>
         <li id="rule-lowercase" class="rule-item">At least one lowercase letter</li>
         <li id="rule-number" class="rule-item">At least one number (0–9)</li>
@@ -224,7 +70,8 @@
 
       <label for="confirmPassword">Confirm Password</label>
       <div class="password-container">
-        <input id="confirmPassword" type="password" name="confirmPassword" required />
+        <!-- Keep same cap as password -->
+        <input id="confirmPassword" type="password" name="confirmPassword" required maxlength="128" autocomplete="new-password" />
         <ion-icon class="toggle-password" name="eye-off-outline" onclick="togglePassword('confirmPassword', this)"></ion-icon>
       </div>
       <p id="passwordMismatchError" class="error-message">Passwords do not match.</p>
@@ -240,7 +87,8 @@
       </select>
 
       <label for="securityAnswer">Answer</label>
-      <input type="text" id="securityAnswer" name="securityAnswer" required />
+      <!-- MAX SECURITY ANSWER 128 -->
+      <input type="text" id="securityAnswer" name="securityAnswer" required maxlength="128" autocomplete="off" />
 
       <div class="container">
         <h1>Register as:</h1>
@@ -255,11 +103,10 @@
       </div>
 
       <button type="submit" class="login" id="registerButton" disabled>Register</button>
-       <div class="footer" style="text-align: center; margin-top: 1em;">
-  Have an account already?
-  <a href="/login" style="font-weight: bold; text-decoration: none; color: #004d40;">Log in</a>
-</div>
-
+      <div class="footer" style="text-align: center; margin-top: 1em;">
+        Have an account already?
+        <a href="/login" style="font-weight: bold; text-decoration: none; color: #004d40;">Log in</a>
+      </div>
     </form>
   </div>
 
@@ -275,7 +122,6 @@
       const emailExistsError = document.getElementById('email-exists-error');
       const passwordInput = document.getElementById('password');
       const confirmPasswordInput = document.getElementById('confirmPassword');
-      const passwordError = document.getElementById('password-error');
       const registerButton = document.getElementById('registerButton');
       const securityQuestion = document.getElementById('securityQuestion');
       const securityAnswer = document.getElementById('securityAnswer');
@@ -287,7 +133,13 @@
       }
 
       function validatePasswordComplexity(password) {
+        // 8+ chars, 1 upper, 1 lower, 1 digit, 1 special
         return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/.test(password);
+      }
+
+      function withinMax(str, max) {
+        // Count Unicode code points to avoid surrogate pair edge cases
+        return [...(str ?? '')].length <= max;
       }
 
       function checkFormValidity() {
@@ -296,19 +148,21 @@
         const confirmVal = confirmPasswordInput.value;
         const answerVal = securityAnswer.value.trim();
 
+        const emailOK = emailVal.endsWith('@dlsu.edu.ph') && withinMax(emailVal, 254);
+        const passMaxOK = withinMax(passwordVal, 128) && withinMax(confirmVal, 128);
         const allRulesPassed = validatePasswordComplexity(passwordVal);
-        const emailOK = emailVal.endsWith('@dlsu.edu.ph');
         const passMatch = passwordVal === confirmVal;
         const questionOK = securityQuestion.value !== '';
-        const answerOK = answerVal !== '';
+        const answerOK = answerVal !== '' && withinMax(answerVal, 128);
         const emailUnique = emailExistsError.style.display === 'none';
 
-        registerButton.disabled = !(emailOK && passMatch && questionOK && answerOK && allRulesPassed && emailUnique);
+        registerButton.disabled = !(emailOK && passMaxOK && passMatch && questionOK && answerOK && allRulesPassed && emailUnique);
       }
 
       passwordInput.addEventListener('input', () => {
         const val = passwordInput.value;
         updateRule('rule-length', val.length >= 8);
+        updateRule('rule-max', val.length <= 128);
         updateRule('rule-uppercase', /[A-Z]/.test(val));
         updateRule('rule-lowercase', /[a-z]/.test(val));
         updateRule('rule-number', /\d/.test(val));
@@ -344,10 +198,10 @@
 
       document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        // Inside your registerForm submit handler
+
         const emailValue = emailInput.value.trim().toLowerCase();
         const parts = emailValue.split('@')[0].split('_');
-        const name = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' '); // e.g., "con_serrano" → "Con Serrano"
+        const name = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
 
         const payload = {
           email: emailValue,
@@ -356,11 +210,11 @@
           isTechnician: document.querySelector('input[name="isTechnician"]:checked').value,
           securityQuestion: securityQuestion.value,
           securityAnswer: securityAnswer.value.trim(),
-          name // ✅ include name here
+          name
         };
 
         if (payload.password !== payload.confirmPassword) {
-          passwordError.style.display = 'block';
+          document.getElementById('passwordMismatchError').style.display = 'block';
           return;
         }
 
@@ -383,7 +237,6 @@
         }
       });
 
-      // When the "Close" button is clicked, redirect to login
       successDialog.querySelector('.bdialog').addEventListener('click', () => {
         successDialog.close();
         window.location.href = '/login';
@@ -402,30 +255,22 @@
     }
 
     function validatePasswordMatchOnBlur() {
-    const password = document.getElementById('password').value;
-    const confirm = document.getElementById('confirmPassword').value;
-    const error = document.getElementById('passwordMismatchError');
-
-    if (confirm && password !== confirm) {
-      error.style.display = 'block';
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirmPassword').value;
+      const error = document.getElementById('passwordMismatchError');
+      if (confirm && password !== confirm) error.style.display = 'block';
     }
-  }
 
     function validatePasswordMatchOnInput() {
       const password = document.getElementById('password').value;
       const confirm = document.getElementById('confirmPassword').value;
       const error = document.getElementById('passwordMismatchError');
-
-      if (password === confirm) {
-        error.style.display = 'none';
-      }
+      if (password === confirm) error.style.display = 'none';
     }
 
     document.getElementById('confirmPassword').addEventListener('blur', validatePasswordMatchOnBlur);
     document.getElementById('confirmPassword').addEventListener('input', validatePasswordMatchOnInput);
     document.getElementById('password').addEventListener('input', validatePasswordMatchOnInput);
-
-
   </script>
 </body>
 </html>

@@ -5,7 +5,20 @@ const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
-    maxlength: 100
+    unique: true,
+    trim: true,
+    lowercase: true,
+    maxlength: 254,                // ⬅️ was 100
+    validate: [
+      {
+        validator: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+        message: 'Invalid email format.'
+      },
+      {
+        validator: v => v.endsWith('@dlsu.edu.ph'),
+        message: 'Must use a DLSU email.'
+      }
+    ]
   },
   password: {
     type: String,

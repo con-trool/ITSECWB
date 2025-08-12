@@ -279,16 +279,16 @@
     <div class="form-container">
         <form action="/update-user" method="post" enctype="multipart/form-data">
             <label for="name">Name:</label>
-            <input type="text" id="name" name="name" placeholder="{{user.name}}" value="{{user.name}}">
+            <input type="text" id="name" name="name" maxlength="128" placeholder="{{user.name}}" value="{{user.name}}">
 
             <label for="college">College:</label>
-            <input type="text" id="college" name="college" placeholder="{{user.college}}" value="{{user.college}}">
+            <input type="text" id="college" name="college" maxlength="128" placeholder="{{user.college}}" value="{{user.college}}">
 
             <label for="program">Program:</label>
-            <input type="text" id="program" name="program" placeholder="{{user.program}}" value="{{user.program}}">
+            <input type="text" id="program" name="program" maxlength="128" placeholder="{{user.program}}" value="{{user.program}}">
 
             <label for="description">Description:</label>
-            <textarea id="description" name="description" placeholder="{{user.description}}">{{user.description}}</textarea>
+            <textarea id="description" name="description" maxlength="128" placeholder="{{user.description}}">{{user.description}}</textarea>
             
            <label for="picture">Upload a picture:</label>
                 <input
@@ -315,7 +315,7 @@
    
 
     <p>New Password:</p>
-    <input type="password" id="newPass" placeholder="New Password" />
+    <input type="password" id="newPass" placeholder="New Password" maxlength="128"/>
     <ul id="pass-rules">
       <li id="pass-rule-length" class="rule-item">At least 8 characters</li>
       <li id="pass-rule-uppercase" class="rule-item">At least one uppercase letter</li>
@@ -324,7 +324,7 @@
       <li id="pass-rule-special" class="rule-item">At least one special character (!@#$%^&*)</li>
     </ul>
 
-    <input type="password" id="confirmNewPass" placeholder="Confirm New Password" />
+    <input type="password" id="confirmNewPass" placeholder="Confirm New Password" maxlength="128"/>
      <div id="passwordChangeError" class="error" style="display: none;"></div>
     <div id="passMatchError" class="error">Passwords do not match.</div>
 
