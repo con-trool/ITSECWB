@@ -351,7 +351,7 @@ app.post('/login', async (req, res, next) => {
       });
     }
 
-    // ✅ Successful login → DO NOT touch lastLoginAttempt/lastLoginSuccess here
+    // Successful login → DO NOT touch lastLoginAttempt/lastLoginSuccess here
     user.failedLoginAttempts = 0;
     user.lockUntil = null;
     await user.save();
@@ -871,7 +871,7 @@ app.get('/logout', async (req, res) => {
   const destroySession = util.promisify(req.session.destroy).bind(req.session);
 
   try {
-    // ✅ Overwrite fields on successful session logout
+    // Overwrite fields on successful session logout
     const mongoId = req.session.userId;
     if (mongoId) {
       try {
@@ -1516,8 +1516,8 @@ app.post('/api/bookReservation', async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Unauthorized to book for another user' });
     }
 
-    // ✅ NEW: ensure the target user exists
-    const targetUser = await User.findOne({ userID }); // or User.findById(userID) if you use _id
+    // Ensure the target user exists
+    const targetUser = await User.findOne({ userID });
     if (!targetUser) {
       await Log.create({
         userID: actingUserID,
@@ -1557,7 +1557,7 @@ app.post('/api/bookReservation', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Seat is already reserved' });
     }
 
-    // Book the seat
+    // Book seat
     seat.isAvailable = false;
     seat.userID = userID;
     seat.isAnonymous = isAnonymous;
@@ -1682,7 +1682,7 @@ app.post("/change-password", async (req, res) => {
       status: 'success'
     });
 
-    // 🔒 Immediately log the user out
+    // Immediately log the user out
     const destroySession = util.promisify(req.session.destroy).bind(req.session);
     try {
       await Log.create({
