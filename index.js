@@ -311,7 +311,7 @@ app.post('/login', async (req, res, next) => {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      // ❌ Failed login → record attempt + false
+      // Failed login = record attempt + false
       user.lastLoginAttempt = new Date();
       user.lastLoginSuccess = false;
 
@@ -351,12 +351,12 @@ app.post('/login', async (req, res, next) => {
       });
     }
 
-    // Successful login → DO NOT touch lastLoginAttempt/lastLoginSuccess here
+    // Successful login
     user.failedLoginAttempts = 0;
     user.lockUntil = null;
     await user.save();
 
-    // set session
+    // Set session
     req.session.userId = user._id.toString();
     req.session.isTechnician = user.isTechnician;
     req.session.isAdmin = user.isAdmin;
@@ -373,14 +373,14 @@ app.post('/login', async (req, res, next) => {
       description: user.description
     };
 
-    // optional: keep this if you still want to show prior attempt result in the session
+    // Show prior attempt result in the session
     req.session.lastLoginAttempt = {
       date: user.lastLoginAttempt,
       success: user.lastLoginSuccess
     };
 
     if (rememberMe) {
-      // ⚠️ consider not storing plaintext password here
+      // Not storing plaintext password
       res.cookie('rememberMe', { email, password }, {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true
@@ -636,6 +636,18 @@ app.post('/register', lengthValidatorJson, async (req, res) => {
       return res.send(`<script>alert('Passwords do not match.'); window.history.back();</script>`);
     }
 
+    const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+    if (!complexityRegex.test(password)) {
+      await Log.create({
+        userID: 0,
+        role: 'student',
+        action: 'register',
+        details: `Password does not meet complexity requirements for email: ${email}`,
+        status: 'failure'
+      });
+      return res.send(`<script>alert('Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character (!@#$%^&*).'); window.history.back();</script>`);
+    }
+
     const existingUser = await User.findOne({ username: email });
     if (existingUser) {
       await Log.create({
@@ -807,6 +819,20 @@ app.post('/forgot/reset-password', async (req, res) => {
           message: "This password has already been used. Please create a unique password."
         });
       }
+    }
+    const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+    if (!complexityRegex.test(newPassword)) {
+      await Log.create({
+        userID: user.userID,
+        role: user.isAdmin ? 'admin' : user.isTechnician ? 'technician' : 'student',
+        action: 'change_password',
+        details: 'Password reset blocked - complexity requirements not met',
+        status: 'failure'
+      });
+      return res.json({
+        success: false,
+        message: "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character (!@#$%^&*)."
+      });
     }
 
     // Hash and save new password
@@ -1624,6 +1650,23 @@ app.post("/change-password", async (req, res) => {
         status: 'failure'
       });
       return res.json({ success: false, message: "Incorrect current password." });
+    }
+
+    // Password complexity check
+    const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+    if (!complexityRegex.test(newPassword)) {
+      await Log.create({
+        userID: actingUserID, 
+        role: actingRole,
+        action: 'change_password',
+        details: 'Password change blocked - complexity requirements not met',
+        status: 'failure'
+      });
+      return res.json({
+        success: false,
+        message:
+          "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character (!@#$%^&*)."
+      });
     }
 
     const now = new Date();
